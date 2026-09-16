@@ -84,7 +84,10 @@ def fetch_photo(fetch, store, product_id, size=DEFAULT_SIZE, home=None, prices_d
     """
     row = priced_product(store, product_id, prices_dir)
     url = image_url(product_id, size)
-    folder = Path(home or os.environ['HERMES_HOME']) / 'cache' / 'meals-photos'
+    base = home or os.environ.get('HERMES_HOME')
+    if not base:
+        raise ValueError('HERMES_HOME must name this agent installation')
+    folder = Path(base) / 'cache' / 'meals-photos'
     folder.mkdir(mode=0o700, parents=True, exist_ok=True)
     target = folder / f'{product_id}-{size}.jpg'
 

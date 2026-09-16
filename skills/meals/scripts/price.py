@@ -27,7 +27,12 @@ CANDIDATES = 10
 
 
 def cache_path(home, store, term, unit):
-    folder = Path(home or os.environ['HERMES_HOME']) / 'cache' / 'meals-prices'
+    # meals.py refuses this the same way. A bare KeyError reaches the model as
+    # "KeyError: 'HERMES_HOME'", which says nothing about what to do next.
+    base = home or os.environ.get('HERMES_HOME')
+    if not base:
+        raise ValueError('HERMES_HOME must name this agent installation')
+    folder = Path(base) / 'cache' / 'meals-prices'
     folder.mkdir(mode=0o700, parents=True, exist_ok=True)
     safe = ''.join(letter if letter.isalnum() else '-' for letter in term.lower())[:40]
     return folder / f'{store}-{safe}-{unit or "any"}.json'

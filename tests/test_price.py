@@ -132,3 +132,28 @@ class Caching(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class WithoutAHome(unittest.TestCase):
+    """HERMES_HOME names the installation whose cache these answers belong in.
+
+    Unset, the lookup used to die with a bare ``KeyError: 'HERMES_HOME'``, which
+    reaches the model as a stack-trace fragment telling it nothing it can act on.
+    meals.py already refuses this by name; these do now too.
+    """
+
+    def setUp(self):
+        self.saved = os.environ.pop('HERMES_HOME', None)
+        self.addCleanup(lambda: os.environ.__setitem__('HERMES_HOME', self.saved)
+                        if self.saved is not None else None)
+
+    def test_pricing_without_a_home_says_which_variable_is_missing(self):
+        with self.assertRaises(ValueError) as caught:
+            price.price_item(Recorder([]), 'id', 'secret', '70300022', 'milk')
+        self.assertIn('HERMES_HOME', str(caught.exception))
+
+    def test_an_explicit_home_still_works_without_the_variable(self):
+        with tempfile.TemporaryDirectory() as home:
+            found = price.price_item(Recorder([(200, TOKEN), (200, MILK)]), 'id', 'secret',
+                                     '70300022', 'milk', home=Path(home))
+            self.assertIsNotNone(found['best'])
