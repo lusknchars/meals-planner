@@ -357,6 +357,9 @@ USDA_QUERIES = {
     'yoghurt': 'yogurt plain whole milk',
     'tapioca flour': 'tapioca pearl dry',
     'eggs': 'eggs grade a large egg whole',
+    # A bare search returned "Cloudberries, raw (Alaska Native)": a subsistence
+    # food with no portion weight, standing in for the strawberries a plan prices.
+    'berries': 'strawberries raw',
 }
 
 

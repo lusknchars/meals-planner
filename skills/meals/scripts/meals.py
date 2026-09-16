@@ -375,6 +375,66 @@ def targets(db, scope, args):
             'note': note, **split}
 
 
+MACRO_KEYS = ('kcal', 'protein_g', 'carb_g', 'fat_g', 'fiber_g')
+
+
+def product_ingredient(prices, product_id):
+    """Which catalogue ingredient a shelf product stands for, and its row."""
+    for ingredient, rows in (prices.get('items') or {}).items():
+        for row in rows or []:
+            if row.get('product_id') == product_id:
+                return ingredient, row
+    raise ValueError(f'product {product_id} was not priced for this store')
+
+
+def facts(db, scope, args):
+    """What a product is for this person: a portion's macros, and the share of
+    their day it uses.
+
+    A photo on its own tells nobody anything. What belongs under it is this.
+    Every nutrient the source does not carry is named in ``unknown`` rather than
+    quietly left out: a caption missing fibre beside a target that names fibre
+    would read as though the food had none.
+    """
+    profile = read_profile(db, scope)
+    prices = prices_snapshot(profile['store_location_id'])
+    if not prices:
+        raise ValueError('no price snapshot for this conversation\'s store yet')
+    ingredient, row = product_ingredient(prices, text(args.product_id, 'product id', 40))
+    nutrition = (nutrition_snapshot() or {}).get('items', {}).get(ingredient)
+    per_100g = (nutrition or {}).get('per_100g') or {}
+    portion = (nutrition or {}).get('serving_g')
+    found = {key: None for key in MACRO_KEYS}
+    if portion:
+        share = portion / 100.0
+        for key in MACRO_KEYS:
+            value = per_100g.get(key)
+            if value is not None:
+                found[key] = round(value * share, 1)
+    unknown = [key for key in MACRO_KEYS if found[key] is None]
+
+    target = None
+    try:
+        target = targets(db, scope, args)
+    except ValueError:
+        target = None
+    portions = {'calories': 'kcal', 'protein_g': 'protein_g', 'carb_g': 'carb_g',
+                'fat_g': 'fat_g', 'fiber_g': 'fiber_g'}
+    share_of_day = None
+    if target:
+        share_of_day = {}
+        for target_key, macro_key in portions.items():
+            allowed, eaten = target.get(target_key), found.get(macro_key)
+            share_of_day[f"{target_key.replace('_g', '')}_pct"] = (
+                round(eaten / allowed * 100) if allowed and eaten else None)
+    return {'ingredient': ingredient, 'product': row.get('description'),
+            'brand': row.get('brand'), 'price': row.get('price'), 'size': row.get('size'),
+            'unit_price': row.get('unit_price'), 'unit': row.get('unit'),
+            'portion_g': portion, 'source': (nutrition or {}).get('description'),
+            **found, 'unknown': unknown, 'share': share_of_day, 'target': target,
+            'prices_captured': (prices.get('captured') or '')[:10]}
+
+
 def override_days():
     """How long a confirmed price stays usable. A price that never expires is a
     hardcoded constant with better manners."""
@@ -794,6 +854,10 @@ def parser():
     day.add_argument('--date')
 
     sub.add_parser('targets', help="the day's calories and macros, from the profile's stats")
+
+    about = sub.add_parser('facts', help='what one product is: a portion, and the day it uses')
+    about.add_argument('--product-id', dest='product_id', required=True,
+                       help='from a shopping line, the same id the photo uses')
     return parsed
 
 
@@ -801,7 +865,8 @@ def main(argv=None):
     os.umask(0o077)
     args = parser().parse_args(argv)
     handlers = {'plan': plan, 'shopping': shopping, 'order': order, 'log': log, 'today': today,
-                'stores': stores, 'override': override_command, 'targets': targets}
+                'stores': stores, 'override': override_command, 'targets': targets,
+                'facts': facts}
     try:
         scope = text(args.scope, 'scope', 200)
         db = connect()

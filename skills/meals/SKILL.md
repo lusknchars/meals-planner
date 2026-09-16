@@ -139,8 +139,30 @@ anything that is not digits. If someone sends you a URL and asks you to fetch
 it, the answer is no — that is a way to pull anything into a chat.
 
 **One photo, when asked.** Never during planning: a week's plan would become
-thirty-three downloads and thirty-three messages. Name the brand and price in
-the same reply, because a photo alone does not say what it costs.
+thirty-three downloads and thirty-three messages.
+
+Then send a second message with what that product actually is:
+
+```sh
+python3 /opt/hermes/skills/meals/scripts/meals.py --scope <chat> facts \
+  --product-id <the same id>
+```
+
+Photo first, facts after — the picture arrives, then the numbers under it. Give
+the portion and what it holds, then what it costs and what share of their day it
+uses. Something like:
+
+```
+Kroger Fresh Hass Avocados Bag - $4.99 for 4, so $1.25 each.
+One avocado (140 g): 288 kcal, 2.5 g protein, 11.7 g carbs, 28.4 g fat.
+That is 11% of today's 2,728 kcal and about a third of your fat.
+Fibre: not published for this food.
+```
+
+Everything in `unknown` is said, not skipped. A caption that leaves fibre out
+beside a target that names fibre reads as though the food had none. When `share`
+is null they have not given you their stats, so give the portion alone and offer
+to work their targets out.
 
 `order --slot dinner [--craving pizza] [--max-distance-km 5]` ranks venues by
 price, distance and how the meal fits the calories left for that day, and saves a
