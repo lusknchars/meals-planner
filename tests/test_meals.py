@@ -60,11 +60,13 @@ class MealsFlow(unittest.TestCase):
         self.catalogue = self.home / 'catalogue.json'
         self.catalogue.write_text(json.dumps(FIXTURE))
 
-    def call(self, *args, scope='chat-1', success=True):
+    def call(self, *args, scope='chat-1', success=True, ordering=True):
+        env = {**os.environ, 'HERMES_HOME': str(self.home), 'MEALS_CATALOGUE': str(self.catalogue)}
+        env.pop('MEALS_ORDERING', None)
+        if ordering:
+            env['MEALS_ORDERING'] = 'on'
         result = subprocess.run([sys.executable, str(SCRIPT), '--scope', scope, *args],
-                                env={**os.environ, 'HERMES_HOME': str(self.home),
-                                     'MEALS_CATALOGUE': str(self.catalogue)},
-                                capture_output=True, text=True)
+                                env=env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0 if success else 1, result.stderr)
         return json.loads(result.stdout if success else result.stderr)
 
@@ -125,6 +127,16 @@ class MealsFlow(unittest.TestCase):
         self.assertEqual(shopping['items'], sorted(shopping['items'], key=lambda i: i['item']))
 
     # Ordering
+
+    def test_ordering_is_off_unless_the_installation_turns_it_on(self):
+        # The shipped agent plans and prices; it does not order. The venues are
+        # sample data, and a draft from them read as a real restaurant.
+        self.profile()
+        refused = self.call('order', '--slot', 'dinner', '--date', '2026-09-16',
+                            success=False, ordering=False)
+        self.assertIn('shopping list', refused['error'])
+        for action in (['list'], ['confirm', 'abc']):
+            self.call('order', *action, success=False, ordering=False)
 
     def test_order_prefers_close_cheap_and_fitting(self):
         self.profile()

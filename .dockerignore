@@ -18,3 +18,6 @@
 **/nutrition.rejected.json
 **/plow-credentials
 **/.env
+# Built and tested, not shipped yet: no shopper login has been tested end to end.
+skills/meals/scripts/cart.py
+skills/meals/scripts/instacart.py

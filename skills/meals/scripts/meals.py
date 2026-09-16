@@ -970,7 +970,16 @@ def consumed_on(db, scope, date):
     return int(row['total'])
 
 
+ORDERING_OFF = ('ordering is not part of this agent: it plans, prices and makes the shopping '
+                'list. Say so plainly, then offer the shopping list and where to collect it '
+                '(pickup)')
+
+
 def order(db, scope, args):
+    # Off unless the installation turns it on. The shipped venues are sample
+    # data, and a draft from them reads as a real restaurant down the road.
+    if os.environ.get('MEALS_ORDERING', '').strip().lower() != 'on':
+        raise ValueError(ORDERING_OFF)
     if args.action == 'list':
         rows = db.execute('SELECT payload, status FROM orders WHERE scope=? '
                           'ORDER BY created DESC', (scope,)).fetchall()

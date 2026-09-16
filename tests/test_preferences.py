@@ -81,7 +81,7 @@ class Base(unittest.TestCase):
     def call(self, *args, success=True):
         env = {**os.environ, 'HERMES_HOME': str(self.home),
                'MEALS_CATALOGUE': str(self.catalogue), 'MEALS_PRICES_DIR': str(self.home),
-               'MEALS_NUTRITION': str(self.home / 'absent.json')}
+               'MEALS_NUTRITION': str(self.home / 'absent.json'), 'MEALS_ORDERING': 'on'}
         run = subprocess.run([sys.executable, str(SCRIPT), '--scope', 'chat-1', *args],
                              env=env, capture_output=True, text=True)
         self.assertEqual(run.returncode, 0 if success else 1, run.stderr or run.stdout)

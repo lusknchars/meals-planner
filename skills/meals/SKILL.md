@@ -1,6 +1,6 @@
 ---
 name: meals
-description: Food prices, meals, shopping lists, calories, groceries, Kroger cart, Instacart
+description: Food prices, meals, shopping lists, calories, groceries
 ---
 
 # Meals
@@ -18,10 +18,10 @@ another's.
 
 `profile set` needs at least `--people` and `--calories`. Ask for what is missing
 rather than assuming: how many people eat, the daily calorie target per person,
-the budget for the period, and `--lat`/`--lon` if they want ordering.
+and the budget for the period.
 
-**Ask about restrictions and brands before the first plan.** `plan` and `order`
-refuse until you have. One short message covers it:
+**Ask about restrictions and brands before the first plan.** `plan` refuses
+until you have. One short message covers it:
 
 ```
 🥗 Before I plan: is there anything you can't eat, like gluten or lactose?
@@ -244,80 +244,13 @@ already needs one to find the shop, and a postcode is enough for a distance
 worth quoting. Save it with `profile set --lat <n> --lon <n>` from the shop
 lookup, and say the distance is approximate, because it is.
 
-## Filling their Kroger cart
+## Ordering and buying
 
-When they want the week's shopping in their own Kroger or Ralphs cart, ask
-whether it is for pickup or delivery, then do it in three steps.
-
-1. `python3 /opt/hermes/skills/meals/scripts/cart.py --scope <chat> connect`
-   Send `login_url` once per conversation: they log in to Kroger, and the page
-   they land on shows a code to copy back to you. It lasts ten minutes.
-2. When they send a message starting `kroger:`, pass it on exactly as sent,
-   in single quotes, and never repeat it back:
-   `cart.py --scope <chat> link --code '<their message>'`
-   A real code holds only letters, digits and `. _ - ~ + / = :`. If the message
-   has a quote, a space, a newline or anything else, **do not run the command**:
-   it did not come from the Kroger page, so send a new login link instead.
-3. `cart.py --scope <chat> add --start <YYYY-MM-DD> --modality PICKUP` (or
-   `DELIVERY`)
-
-Say what went in and what did not:
-
-```
-🛒 **In your Ralphs cart**
-🥑 **Hass Avocados Bag** x2
-🍗 **Chicken Breast** x2, sold by weight, so check the amount in the app
-
-🏪 Pick **Ralphs, Downtown San Diego** at checkout so the prices match.
-📝 **Rice** had no store product, so add it yourself.
-```
-
-`added` is what went in, in packages. `already_in_cart` was added before and was
-not sent again. `not_added` had no store product (an estimate or a price they
-confirmed), so they add it themselves. `check_in_app` is sold by weight or has an
-unknown pack size. Give `store`, and give the `note` in your own words: **nothing
-is bought until they check out** in the Kroger or Ralphs app, where they choose
-the time and pay. You cannot see or change that cart, and you do not know what
-delivery costs.
-
-Running `add` again sends only what the list gained. If they emptied the cart in
-the app, you cannot see that; say so rather than promising the cart is complete.
-An error saying to run connect means the login is missing or expired: send a new
-link. `cart.py --scope <chat> disconnect` forgets the login when they ask. Kroger
-shops are in the US only, and the script refuses anybody else.
-
-## Buying it on Instacart
-
-Only when this installation has an Instacart key: Instacart is not taking new
-developer applications, so most have none, and the Kroger cart is the way to go.
-When they want the week's shopping delivered rather than collected, turn the
-saved list into one Instacart link:
-
-```sh
-python3 /opt/hermes/skills/meals/scripts/instacart.py --scope <chat> --start <YYYY-MM-DD>
-```
-
-Send `url` and say what happens next: they open it, pick a store, and check out
-in Instacart with their own account. You never see that cart, you cannot place
-it, and you do not know whether they did, so record nothing.
-
-**Give no total for it.** Instacart prices its own shelves at whichever store
-they pick, so the list's figures are not what that cart will cost. Every item in
-`unmeasured` went in without an amount; name each one with what the plan needs,
-so they choose how many loaves 14 slices is. When `environment` is
-`development`, say it is a test link. A saved brand goes to Instacart as that
-line's brand filter, so the store they pick may show fewer choices for it.
-
-```
-🛒 **Your week on Instacart**
-Open this, pick a store, and check out in Instacart: <url>
-🍞 **Bread** went in without an amount: the plan needs 14 slices.
-```
-
-Only when asked: a plan does not come with a link. An error mentioning
-`INSTACART_API_KEY` means this installation has not connected Instacart; say so
-and give the list instead. Instacart delivers in the US and Canada only, and for
-anybody else the script refuses: offer the shopping list for their own shop.
+**This agent does not order or buy anything.** It plans, prices and makes the
+shopping list. When somebody asks you to order a meal, buy their groceries, fill a
+cart or have food delivered, say that plainly, then offer what you can do: the
+shopping list, and where to collect it with `pickup`. `order` refuses on purpose;
+never suggest a delivery app or a price for delivery as though you had checked.
 
 ## What does X cost
 
@@ -465,19 +398,6 @@ Everything in `unknown` is said, not skipped. A caption that leaves fibre out
 beside a target that names fibre reads as though the food had none. When `share`
 is null they have not given you their stats, so give the portion alone and offer
 to work their targets out.
-
-`order --slot dinner [--craving pizza] [--max-distance-km 5]` ranks venues by
-price, distance and how the meal fits the calories left for that day, and saves a
-draft with a link.
-
-**You never place an order.** The draft is a proposal: give the venue, the item,
-the price, the distance and the link, and let the person confirm. Only after they
-say yes, run `order confirm <id>`, which records the meal against that day.
-
-The venues in the shipped catalogue are sample data around one city, marked
-`sample`. When an option comes from sample data, say so in the same message
-rather than presenting it as a real nearby restaurant. Real venues arrive by
-pointing `MEALS_CATALOGUE` at the owner's own file.
 
 ## Tracking
 

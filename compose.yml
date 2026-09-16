@@ -10,12 +10,7 @@ services:
       # Set them in a .env beside this file, or export them before compose up.
       KROGER_CLIENT_ID: ${KROGER_CLIENT_ID:-}
       KROGER_CLIENT_SECRET: ${KROGER_CLIENT_SECRET:-}
-      # Where Kroger sends people after login; the shared code page by default.
-      KROGER_REDIRECT_URI: ${KROGER_REDIRECT_URI:-}
       USDA_API_KEY: ${USDA_API_KEY:-}
-      # development until Instacart approves a production key.
-      INSTACART_API_KEY: ${INSTACART_API_KEY:-}
-      INSTACART_ENV: ${INSTACART_ENV:-development}
       # Price and nutrition snapshots live in the volume, not the image: Kroger's
       # terms cover calling their API for your own planning, not shipping their
       # prices to everyone who installs this.
