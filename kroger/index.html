@@ -182,7 +182,8 @@
     show('refused');
     return;
   }
-  if (!code || !state || !/^[0-9a-f]{16}$/.test(state)) {
+  // The same shape cart.py accepts; anything else is not a login worth copying.
+  if (!code || !state || !/^[0-9a-f]{16}$/.test(state) || !/^[A-Za-z0-9._~+\/=-]{1,3000}$/.test(code)) {
     show('empty');
     return;
   }
