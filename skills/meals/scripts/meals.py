@@ -111,8 +111,31 @@ def connect():
     db.row_factory = sqlite3.Row
     db.execute('PRAGMA foreign_keys=ON')
     db.executescript(SCHEMA)
+    migrate(db)
     os.chmod(store, 0o600)
     return db
+
+
+# Columns added to profiles after the first build. CREATE TABLE IF NOT EXISTS
+# never alters a table that already exists, so an installation that had talked to
+# the agent before these arrived failed its next profile set with "table profiles
+# has no column named store_location_id".
+ADDED_COLUMNS = (('store_location_id', 'TEXT'), ('age', 'INTEGER'), ('sex', 'TEXT'),
+                 ('height_in', 'REAL'), ('weight_lb', 'REAL'), ('activity', 'TEXT'),
+                 ('goal', 'TEXT'))
+
+
+def migrate(db):
+    """Add any profile column this build expects and an older file lacks.
+
+    Additive only: a new column starts empty, so a profile written by an earlier
+    build keeps everything it had. Safe to run on every open.
+    """
+    present = {row[1] for row in db.execute('PRAGMA table_info(profiles)')}
+    for column, kind in ADDED_COLUMNS:
+        if column not in present:
+            db.execute(f'ALTER TABLE profiles ADD COLUMN {column} {kind}')
+    db.commit()
 
 
 def suits(tags, diet):
