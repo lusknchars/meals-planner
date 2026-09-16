@@ -19,6 +19,7 @@ returns ``(status, bytes)``.
 import argparse
 import base64
 import datetime as dt
+import gzip
 import json
 import os
 from pathlib import Path
@@ -47,15 +48,28 @@ SIZE_RE = re.compile(r'^\s*(\d+(?:\.\d+)?|\d+\s*/\s*\d+)\s*'
                      r'(fl\s*oz|oz|lb|gal|qt|pt|ml|l|kg|g)\s*$', re.IGNORECASE)
 
 
+def _decoded(raw):
+    """Kroger gzips bodies even when identity encoding is requested, and a
+    compressed 401 hides the one sentence that says why a key was refused."""
+    if raw[:2] == b'\x1f\x8b':
+        try:
+            return gzip.decompress(raw)
+        except (OSError, EOFError):
+            return raw
+    return raw
+
+
 def http(method, url, headers=None, body=None, timeout=60):
     """The real fetch. Returns (status, bytes); an HTTP error is a status, not a raise."""
     request = urllib.request.Request(url, data=body, method=method,
-                                     headers={'User-Agent': USER_AGENT, **(headers or {})})
+                                     headers={'User-Agent': USER_AGENT,
+                                              'Accept-Encoding': 'identity',
+                                              **(headers or {})})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            return response.status, response.read()
+            return response.status, _decoded(response.read())
     except urllib.error.HTTPError as error:
-        return error.code, error.read()
+        return error.code, _decoded(error.read())
 
 
 def _json(status, raw, what):
