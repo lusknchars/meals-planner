@@ -376,6 +376,26 @@ def targets(db, scope, args):
 
 
 MACRO_KEYS = ('kcal', 'protein_g', 'carb_g', 'fat_g', 'fiber_g')
+# The order a shop is walked, not the order the alphabet falls in. "Other" is
+# last and always exists: an ingredient nobody categorised still has to be bought.
+SECTION_ORDER = ('Produce', 'Bakery', 'Meat & Fish', 'Dairy', 'Pantry', 'Frozen', 'Other')
+# One per section, so a list scans at a glance on a phone. Kept here rather than
+# left to the model: the same food should not be a different symbol each week.
+SECTION_EMOJI = {'Produce': '🥬', 'Bakery': '🍞', 'Meat & Fish': '🥩', 'Dairy': '🥛',
+                 'Pantry': '🫙', 'Frozen': '🧊', 'Other': '✨'}
+
+
+def sectioned(items, categories):
+    """Group a shopping list the way somebody walks a shop."""
+    grouped = {}
+    for held in items:
+        name = categories.get(held['item']) or 'Other'
+        if name not in SECTION_ORDER:
+            name = 'Other'
+        grouped.setdefault(name, []).append(held)
+    return [{'name': name, 'emoji': SECTION_EMOJI[name], 'items': grouped[name],
+             'cost': round(sum(held['cost'] for held in grouped[name]), 2)}
+            for name in SECTION_ORDER if name in grouped]
 
 
 def product_ingredient(prices, product_id):
@@ -680,7 +700,8 @@ def shopping(db, scope, args):
                     image=product.get('image'), unit_price=rate,
                     median_unit_price=median)
         from_snapshot += 1
-    return {'items': items, 'total_cost': round(sum(held['cost'] for held in items), 2),
+    return {'items': items, 'sections': sectioned(items, catalogue().get('categories') or {}),
+            'total_cost': round(sum(held['cost'] for held in items), 2),
             'currency': profile['currency'], 'start': saved['start'], 'people': profile['people'],
             'priced_from_snapshot': from_snapshot, 'confirmed_by_you': by_hand,
             'estimated': len(items) - from_snapshot - by_hand,

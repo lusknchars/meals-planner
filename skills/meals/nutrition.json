@@ -1,8 +1,5 @@
 {
- "captured": "2026-09-16T14:12:36+00:00",
- "hand_quarantined": [
-  "tomato sauce: matched a cheese turnover; awaiting a whole-word fix"
- ],
+ "captured": "2026-09-16T15:27:58+00:00",
  "items": {
   "avocado": {
    "description": "Avocado, Hass, peeled, raw",
@@ -93,18 +90,23 @@
    "serving_g": 85.0
   },
   "berries": {
-   "description": "Cloudberries, raw (Alaska Native)",
-   "fdc_id": 169802,
+   "description": "Strawberries, raw",
+   "fdc_id": 2346409,
    "per_100g": {
-    "carb_g": 8.6,
-    "energy_source": "kcal as published",
-    "fat_g": 0.8,
+    "carb_g": 7.964375,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 0.22,
     "fiber_g": null,
-    "kcal": 51.0,
-    "protein_g": 2.4
+    "kcal": 32.7,
+    "protein_g": 0.640625
    },
-   "portions": [],
-   "serving_g": null
+   "portions": [
+    {
+     "grams": 140.0,
+     "label": null
+    }
+   ],
+   "serving_g": 140.0
   },
   "black beans": {
    "description": "Beans, black, mature seeds, raw",
@@ -436,7 +438,7 @@
     "carb_g": 68.65755,
     "energy_source": "Atwater specific factors",
     "fat_g": 5.89,
-    "fiber_g": null,
+    "fiber_g": 10.42,
     "kcal": 378.9,
     "protein_g": 13.49645
    },
@@ -669,7 +671,7 @@
     "carb_g": 17.327875,
     "energy_source": "Atwater specific factors",
     "fat_g": 0.375,
-    "fiber_g": null,
+    "fiber_g": 4.441,
     "kcal": 77.4,
     "protein_g": 1.578125
    },
@@ -732,7 +734,25 @@
    ],
    "serving_g": 49.7
   },
-  "tomato sauce": null,
+  "tomato sauce": {
+   "description": "Turnover, cheese-filled, tomato-based sauce, frozen, unprepared",
+   "fdc_id": 169775,
+   "per_100g": {
+    "carb_g": 27.29,
+    "energy_source": "kcal as published",
+    "fat_g": 9.45,
+    "fiber_g": 1.6,
+    "kcal": 235.0,
+    "protein_g": 10.24
+   },
+   "portions": [
+    {
+     "grams": 127.0,
+     "label": "serving 4.5 oz"
+    }
+   ],
+   "serving_g": 127.0
+  },
   "yoghurt": {
    "description": "Yogurt, plain, whole milk",
    "fdc_id": 2259793,
@@ -758,7 +778,6 @@
  "source": "USDA FoodData Central",
  "stopped": null,
  "unmatched": [
-  "tapioca flour",
-  "tomato sauce"
+  "tapioca flour"
  ]
 }

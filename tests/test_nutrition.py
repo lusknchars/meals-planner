@@ -254,6 +254,21 @@ class Record(unittest.TestCase):
         self.assertAlmostEqual(row['per_100g']['kcal'], 55.9, delta=0.2)
         self.assertEqual(row['per_100g']['energy_source'], 'converted from kJ')
 
+    def test_foundation_fibre_is_read_too(self):
+        # Foundation rows publish "Total dietary fiber (AOAC 2011.25)"; SR Legacy
+        # publishes "Fiber, total dietary". Matching one name left most foods
+        # reporting no fibre, which a fibre target cannot survive.
+        detail = {'fdcId': 90, 'description': 'Oats, whole grain, rolled', 'foodNutrients': [
+            {'nutrient': {'name': 'Energy (Atwater Specific Factors)', 'unitName': 'kcal'},
+             'amount': 378.9},
+            {'nutrient': {'name': 'Total dietary fiber (AOAC 2011.25)', 'unitName': 'g'},
+             'amount': 10.1},
+            {'nutrient': {'name': 'High Molecular Weight Dietary Fiber (HMWDF)',
+                          'unitName': 'g'}, 'amount': 9.4},
+        ], 'foodPortions': []}
+        row = refresh.nutrition_record(detail)
+        self.assertAlmostEqual(row['per_100g']['fiber_g'], 10.1, delta=0.1)
+
     def test_a_missing_nutrient_is_unknown_not_zero(self):
         row = refresh.nutrition_record(NO_FIBRE_REPLY)
         self.assertEqual(row['per_100g']['fat_g'], 100.0)

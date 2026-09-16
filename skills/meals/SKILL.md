@@ -52,7 +52,22 @@ with a physician.
 2. Running it again for the same start returns the saved week rather than a new
    one. Say that it is the existing plan, not a fresh idea.
 3. `shopping --start YYYY-MM-DD` aggregates that plan into one list, multiplied
-   by the number of people.
+   by the number of people. Give it back in `sections`, not as `items`: produce
+   first, then bakery, meat and fish, dairy, pantry, frozen, and whatever nobody
+   categorised under "Other". That is the order somebody walks a shop, and it
+   stops a list sending them from avocado to bread to beans and back.
+
+   One line per section, with its symbol and its own total, reads well on a
+   phone. Use the `emoji` each section carries rather than choosing your own —
+   the same food should not be a different symbol each week:
+
+   ```
+   🥬 Produce $28.68 - avocado 4, banana 8, berries 400 g, spinach 240 g
+   🥛 Dairy $12.88 - eggs 22, milk 1200 ml, yoghurt 600 g
+   🫙 Pantry $18.41 - oats 320 g, rice 660 g, lentils 480 g
+   ```
+
+   `items` still holds the flat list when somebody asks for one thing.
 4. Report the per-day calories against the target and the total against the
    budget. When `over_budget` is true, say so plainly and offer to replan with
    cheaper recipes rather than hiding it.

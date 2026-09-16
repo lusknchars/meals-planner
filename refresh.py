@@ -42,7 +42,12 @@ USDA_BASE = 'https://api.nal.usda.gov/fdc/v1'
 USDA_NUTRIENTS = {'Protein': ('g', 'protein_g'),
                   'Carbohydrate, by difference': ('g', 'carb_g'),
                   'Total lipid (fat)': ('g', 'fat_g'),
-                  'Fiber, total dietary': ('g', 'fiber_g')}
+                  # SR Legacy calls it one thing, Foundation another. Matching
+                  # only the first left oats, berries, chicken and avocado
+                  # reporting no fibre at all -- against a target that names 38 g
+                  # of it. The same shape as the Atwater energy names.
+                  'Fiber, total dietary': ('g', 'fiber_g'),
+                  'Total dietary fiber (AOAC 2011.25)': ('g', 'fiber_g')}
 # Foundation rows never publish a bare "Energy" -- they give Atwater factors, and
 # the specific factors are the better figure for a particular food. Lower is
 # preferred. Matching only 'Energy' left every Foundation row with no calories.
