@@ -20,6 +20,30 @@ lookups send Kroger an ingredient name or a postcode, never who is asking. The
 agent holds no payment method, opens no delivery account, and does not order or
 buy anything.
 
+## What you can ask it
+
+Every row was run through the agent's own tools against real Ralphs Downtown San
+Diego data (postcode 92101) on 16 September 2026; the figures are what came back.
+
+| Use case | Text it | What it does |
+|---|---|---|
+| **A week that fits your diet** | "Plan my week: vegan, 1,800 calories a day, $60 budget" | Saves vegan, then plans 21 meals from 12 vegan recipes at 1,780 to 1,950 kcal a day, $50.80 against the $60 |
+| **Gluten or lactose at home** | "Plan the week gluten-free and no lactose for 3 people" | Plans gluten-free and dairy-free for the whole household, every recipe tagged both, and reminds anyone with coeliac disease to check labels |
+| **Your numbers, worked out** | "I'm 30, male, 5'10", 175 lb, moderately active, I want to lose fat" | 2,182 kcal with 175 g protein, 233 g carbs, 61 g fat, 31 g fibre and 88 oz water, computed by the script, and never below a safe floor |
+| **A shopping list you can walk** | "Send me the shopping list" | Groups the list by section, prices 38 of 40 lines at your store, picks packs that fit the week, and says where the shop is and when it shuts |
+| **Your brands** | "I always buy Chobani yogurt and Jif peanut butter" | Prices those brands even when dearer, and says when a shop does not carry one |
+| **What does this cost here?** | "How much is milk near 92101?" | Looks the shelf up live: Ralphs Vitamin D Whole Milk, $4.79 a gallon. Never a price from memory |
+| **What's in this food?** | "Show me the avocado" | Sends the photo, then a 140 g portion: 288 kcal, 28.4 g fat, 11% of the day, and says fibre is not published |
+| **Staying on track** | "I had a 700 calorie burrito for lunch, what's left today?" | Logs it and answers from the record: 1,300 left of 2,000 |
+
+It also says what it does not know:
+
+- **No local shop, no pretending.** From a Brazilian number it hides US shelf
+  prices and asks whether you want them anyway; where no Kroger shop is near, the
+  list says every figure is an estimate.
+- **The price you saw counts.** "Bananas were $0.22 each at Trader Joe's" is
+  saved for 14 days and labelled on the line as your price, not the store's.
+
 ## Install
 
 Docker Desktop and a free Plow line are the only prerequisites.
