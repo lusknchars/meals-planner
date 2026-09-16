@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- This URL carries a login code. Nothing on this page may leave it. -->
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<title>Meals Planner · Kroger code</title>
+<style>
+  :root {
+    --paper: #fbf7ee;
+    --ground: #efe7d6;
+    --ink: #22301f;
+    --muted: #6d6a5c;
+    --rule: #d9cfba;
+    --avocado: #3f6b2f;
+    --avocado-deep: #2c4d20;
+    --pit: #b5652a;
+    --shadow: 0 1px 0 rgba(60, 45, 20, .06), 0 18px 40px -18px rgba(60, 45, 20, .35);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #22251d;
+      --ground: #171a14;
+      --ink: #efe9d8;
+      --muted: #aaa590;
+      --rule: #3b3f32;
+      --avocado: #9fc47f;
+      --avocado-deep: #b9d99b;
+      --pit: #e0955c;
+      --shadow: 0 18px 40px -18px rgba(0, 0, 0, .7);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: max(24px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom));
+    background:
+      radial-gradient(120% 60% at 50% -10%, color-mix(in oklab, var(--avocado) 14%, transparent), transparent 70%),
+      var(--ground);
+    color: var(--ink);
+    font: 17px/1.5 var(--serif);
+  }
+  main { width: 100%; max-width: 420px; }
+
+  .receipt {
+    position: relative;
+    background: var(--paper);
+    padding: 28px 24px 40px;
+    box-shadow: var(--shadow);
+    /* A torn receipt edge, cut rather than drawn. */
+    -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+            mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+    animation: print .5s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  @keyframes print { from { transform: translateY(-10px); opacity: 0; } }
+
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  header img { width: 48px; height: 48px; border-radius: 12px; }
+  .brand { font-size: 15px; letter-spacing: .02em; color: var(--muted); }
+  .brand strong { display: block; color: var(--ink); font-size: 17px; letter-spacing: 0; }
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: 30px;
+    line-height: 1.12;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  p { margin: 0 0 16px; text-wrap: pretty; }
+  .muted { color: var(--muted); font-size: 15px; }
+
+  .rule {
+    border: 0;
+    border-top: 2px dashed var(--rule);
+    margin: 20px -24px;
+  }
+  .label {
+    font: 600 12px/1 var(--mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .code {
+    font: 15px/1.55 var(--mono);
+    word-break: break-all;
+    user-select: all;
+    -webkit-user-select: all;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: color-mix(in oklab, var(--avocado) 9%, var(--paper));
+    border: 1px solid color-mix(in oklab, var(--avocado) 22%, var(--paper));
+    margin-bottom: 14px;
+  }
+  button {
+    appearance: none;
+    width: 100%;
+    min-height: 52px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--avocado);
+    color: var(--paper);
+    font: 600 18px/1 var(--serif);
+    cursor: pointer;
+    transition: background-color .15s ease, transform .1s ease;
+  }
+  button:hover { background: var(--avocado-deep); }
+  button:active { transform: scale(.98); }
+  button:focus-visible { outline: 3px solid var(--pit); outline-offset: 3px; }
+  .status { min-height: 1.5em; margin: 10px 0 0; text-align: center; font-size: 15px; color: var(--avocado); }
+  ol { margin: 0 0 4px; padding-left: 1.2em; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--pit); font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) {
+    .receipt { animation: none; }
+    button { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <article class="receipt">
+    <header>
+      <img src="logo.png" alt="" width="48" height="48">
+      <div class="brand"><strong>Meals Planner</strong>Kroger cart</div>
+    </header>
+
+    <section id="ok" hidden>
+      <h1>One last step</h1>
+      <p>Copy this code and send it back in your Meals Planner chat.</p>
+      <div class="label" id="code-label">Your code</div>
+      <div class="code" id="code" aria-labelledby="code-label"></div>
+      <button type="button" id="copy">Copy code</button>
+      <p class="status" id="status" role="status"></p>
+      <hr class="rule">
+      <ol class="muted">
+        <li>It works once, within ten minutes.</li>
+        <li>Meals Planner can only add items to your cart. You choose the time and pay in the Kroger or Ralphs app.</li>
+      </ol>
+    </section>
+
+    <section id="refused" hidden>
+      <h1>Nothing was connected</h1>
+      <p>Kroger did not share access to your cart<span id="reason"></span>.</p>
+      <p class="muted">Ask Meals Planner for a new login link whenever you want to try again.</p>
+    </section>
+
+    <section id="empty" hidden>
+      <h1>No code on this page</h1>
+      <p>This page shows a code after you log in to Kroger from a Meals Planner link.</p>
+      <p class="muted">If you already copied it, send it in your chat. Otherwise ask Meals Planner for a new login link.</p>
+    </section>
+  </article>
+</main>
+<script>
+(function () {
+  var query = new URLSearchParams(location.search);
+  var code = query.get('code');
+  var state = query.get('state');
+  var error = query.get('error');
+
+  // The code should not sit in the address bar or the history once it is shown.
+  if (location.search) history.replaceState(null, '', location.pathname);
+
+  function show(id) { document.getElementById(id).hidden = false; }
+
+  if (error) {
+    var reason = error === 'access_denied' ? '' : ' (' + error.slice(0, 60) + ')';
+    document.getElementById('reason').textContent = reason;
+    show('refused');
+    return;
+  }
+  // The same shape cart.py accepts; anything else is not a login worth copying.
+  if (!code || !state || !/^[0-9a-f]{16}$/.test(state) || !/^[A-Za-z0-9._~+\/=-]{1,3000}$/.test(code)) {
+    show('empty');
+    return;
+  }
+
+  var text = 'kroger:' + state + '.' + code;
+  var box = document.getElementById('code');
+  var status = document.getElementById('status');
+  box.textContent = text;
+  show('ok');
+
+  document.getElementById('copy').addEventListener('click', function () {
+    function selectIt() {
+      var range = document.createRange();
+      range.selectNodeContents(box);
+      var selection = getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    function done() { status.textContent = 'Copied. Now paste it in your chat.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {
+        selectIt();
+        status.textContent = 'Selected. Copy it and paste it in your chat.';
+      });
+    } else {
+      selectIt();
+      status.textContent = document.execCommand && document.execCommand('copy')
+        ? 'Copied. Now paste it in your chat.'
+        : 'Selected. Copy it and paste it in your chat.';
+    }
+  });
+})();
+</script>
+</body>
+</html>

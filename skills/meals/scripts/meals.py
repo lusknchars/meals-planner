@@ -6,6 +6,7 @@ something was saved; a non-zero exit means nothing was written.
 """
 import argparse
 import datetime as dt
+import difflib
 import json
 import math
 import os
@@ -25,6 +26,9 @@ OVERSHOOT_PENALTY = 6.0
 # not here (a count, a slice) has no comparable rate, so the estimate stands.
 UNIT_SCALE = {('g', 'kg'): 0.001, ('kg', 'kg'): 1.0, ('ml', 'l'): 0.001, ('l', 'l'): 1.0,
               ('un', 'ct'): 1.0, ('sl', 'ct'): 1.0}
+# Kroger rounds unit prices to the cent, so a bag of four avocados can read as
+# 3.99 of them. Without this slack, four avocados would be two bags.
+PACKAGE_SLACK = 0.02
 
 # Daily targets. Mifflin-St Jeor, a standard activity multiplier, a goal shift,
 # then macro grams. Deterministic on purpose: a model is good at sounding certain
@@ -60,7 +64,23 @@ CREATE TABLE IF NOT EXISTS entries (
 CREATE TABLE IF NOT EXISTS overrides (
   scope TEXT NOT NULL, item TEXT NOT NULL, price REAL NOT NULL, unit TEXT NOT NULL,
   source TEXT, captured TEXT NOT NULL, PRIMARY KEY (scope, item));
+CREATE TABLE IF NOT EXISTS brands (
+  scope TEXT NOT NULL, item TEXT NOT NULL, brand TEXT NOT NULL, PRIMARY KEY (scope, item));
 '''
+
+# What somebody says, and the catalogue tag that plans around it. Lactose is
+# planned dairy-free: stricter than an intolerance needs, never looser. A word
+# not here is refused, because a restriction saved and then not planned around
+# is worse than one the agent admits it cannot handle.
+RESTRICTIONS = {'vegetarian': 'vegetarian', 'vegan': 'vegan',
+                'gluten': 'gluten-free', 'gluten-free': 'gluten-free',
+                'celiac': 'gluten-free', 'coeliac': 'gluten-free',
+                'lactose': 'dairy-free', 'lactose-free': 'dairy-free',
+                'dairy': 'dairy-free', 'dairy-free': 'dairy-free'}
+ASK_FIRST = ('ask about restrictions before planning: anything they cannot eat, such as '
+             'gluten or lactose, a diet such as vegan or vegetarian, and any brand they '
+             'prefer. Save the answer with profile set --diet gluten-free,dairy-free (or '
+             '--diet none) and brand set --item <ingredient> --brand <name>')
 
 
 def text(value, name, maximum=200, optional=False):
@@ -125,7 +145,7 @@ def connect():
 ADDED_COLUMNS = (('store_location_id', 'TEXT'), ('age', 'INTEGER'), ('sex', 'TEXT'),
                  ('height_in', 'REAL'), ('weight_lb', 'REAL'), ('activity', 'TEXT'),
                  ('goal', 'TEXT'), ('phone', 'TEXT'), ('country', 'TEXT'),
-                 ('price_country', 'TEXT'))
+                 ('price_country', 'TEXT'), ('diet_asked', 'INTEGER'))
 
 
 def migrate(db):
@@ -144,6 +164,26 @@ def migrate(db):
 def suits(tags, diet):
     """Every restriction the person stated has to be met by the food."""
     return all(restriction in tags for restriction in diet)
+
+
+def restrictions(value):
+    """The catalogue tags for what somebody said they cannot eat. "none" is an answer."""
+    words = [part.strip().lower() for part in value.split(',') if part.strip()]
+    if words == ['none']:
+        return []
+    if 'none' in words:
+        raise ValueError('--diet none means no restrictions, so it cannot sit beside one')
+    unknown = [word for word in words if word not in RESTRICTIONS]
+    if unknown or not words:
+        raise ValueError(f"{', '.join(unknown) or 'an empty diet'} is not a restriction the "
+                         'catalogue can plan around; it plans vegetarian, vegan, gluten-free '
+                         'and dairy-free. Say so rather than planning as though it were handled')
+    return sorted({RESTRICTIONS[word] for word in words})
+
+
+def require_asked(profile):
+    if not profile.get('diet_asked'):
+        raise ValueError(ASK_FIRST)
 
 
 def haversine_km(lat1, lon1, lat2, lon2):
@@ -190,9 +230,11 @@ def prices_snapshot(location_id):
 def value_label(rate, rates):
     """Name how good this price is against what the same ingredient costs here.
 
-    The chosen row is always the cheapest, so the comparison says how far below
-    the usual price it sits — not whether it beats some national average, which
-    this data cannot support. One candidate means no spread to judge.
+    The comparison says how far below the usual price the chosen row sits — not
+    whether it beats some national average, which this data cannot support. The
+    chosen row is the cheapest to buy for the week, which is not always the
+    cheapest per kilo, so it can honestly come out typical. One candidate means
+    no spread to judge.
     """
     if len(rates) < 2:
         return 'only priced option', None
@@ -288,8 +330,23 @@ def day_macros(meals, recipes, nutrition):
             'fiber_unknown': sorted(fibre_unknown)}
 
 
+def packages(quantity, unit, row):
+    """How many of this product cover the quantity, or None when its pack size is unknown."""
+    scale = UNIT_SCALE.get((unit, row.get('unit')))
+    if scale is None or not row.get('price') or not row.get('unit_price'):
+        return None
+    per_package = row['price'] / row['unit_price']
+    return max(1, math.ceil(quantity * scale / per_package - PACKAGE_SLACK))
+
+
 def priced(quantity, unit, candidates):
-    """Cheapest real price for this quantity: (cost, product, value, package_price).
+    """The product that costs least to buy for this quantity:
+    (cost, product, value, package_price, unit_price, median_unit_price).
+
+    Least to buy, not least per kilo: 380 g of chicken from an 8 lb family pack
+    has the best rate on the shelf and nearly four times the spend of a small
+    tray. Food sold by weight is paid for by the weight taken, not by the pack.
+    ``cost`` is still what the week's share of it costs, at that product's rate.
 
     A candidate whose size did not parse has no unit price, so it can only offer
     its package price — the caller then keeps the catalogue estimate and says so,
@@ -307,13 +364,18 @@ def priced(quantity, unit, candidates):
         rate = candidate['unit_price']
         if candidate.get('promo') and candidate.get('price'):
             rate = rate * candidate['promo'] / candidate['price']
-        usable.append((rate, scale, candidate))
+        count = packages(quantity, unit, candidate)
+        if candidate.get('sold_by') == 'WEIGHT' or count is None:
+            spend = rate * quantity * scale
+        else:
+            spend = count * (candidate.get('promo') or candidate['price'])
+        usable.append((rate, scale, candidate, spend))
     package = next((row.get('price') for row in candidates or []
                     if row.get('price') and row.get('relevant') is not False), None)
     if not usable:
         return None, None, None, package, None, None
-    usable.sort(key=lambda found: found[0])
-    rate, scale, chosen = usable[0]
+    usable.sort(key=lambda found: (round(found[3], 2), found[0]))
+    rate, scale, chosen, _ = usable[0]
     value, median = value_label(rate, [found[0] for found in usable])
     return (round(rate * quantity * scale, 2), chosen, value, chosen.get('price'),
             round(rate, 2), median)
@@ -548,6 +610,41 @@ def override_command(db, scope, args):
     return {'override': saved, 'fresh_for_days': override_days()}
 
 
+def read_brands(db, scope):
+    rows = db.execute('SELECT item, brand FROM brands WHERE scope=? ORDER BY item',
+                      (scope,)).fetchall()
+    return [dict(row) for row in rows]
+
+
+def brand_command(db, scope, args):
+    """Record, list or drop the brand somebody buys for one ingredient."""
+    if args.action == 'list':
+        return {'brands': read_brands(db, scope)}
+    item = text(args.item, 'item', 80).lower()
+    if args.action == 'clear':
+        db.execute('DELETE FROM brands WHERE scope=? AND item=?', (scope, item))
+        db.commit()
+        return {'cleared': item}
+    # A brand saved against a name no recipe uses would never apply, silently.
+    names = sorted({part['item'] for recipe in catalogue()['recipes']
+                    for part in recipe['ingredients']})
+    if item not in names:
+        close = difflib.get_close_matches(item, names, n=3)
+        raise ValueError(f'{item} is not an ingredient in the catalogue'
+                         + (f"; did you mean {' or '.join(close)}?" if close else ''))
+    brand = text(args.brand, 'brand', 80)
+    db.execute('''INSERT INTO brands (scope, item, brand) VALUES (?,?,?)
+                  ON CONFLICT(scope, item) DO UPDATE SET brand=excluded.brand''',
+               (scope, item, brand))
+    db.commit()
+    return {'brand': {'item': item, 'brand': brand}}
+
+
+def carries(row, brand):
+    """Whether a shelf product is the brand somebody asked for."""
+    return brand.lower() in f"{row.get('brand') or ''} {row.get('description') or ''}".lower()
+
+
 def stores(db, scope, args):
     profile = read_profile(db, scope)
     if profile['lat'] is None or profile['lon'] is None:
@@ -613,6 +710,7 @@ def read_profile(db, scope):
     saved = dict(row)
     saved.pop('scope')
     saved['diet'] = json.loads(saved['diet'])
+    saved['diet_asked'] = bool(saved.get('diet_asked'))
     return saved
 
 
@@ -623,7 +721,7 @@ def set_profile(db, scope, args):
         'diet': '[]', 'lat': None, 'lon': None, 'address': None, 'currency': None,
         'store_location_id': None, 'age': None, 'sex': None, 'height_in': None,
         'weight_lb': None, 'activity': None, 'goal': None, 'phone': None,
-        'country': None, 'price_country': None}
+        'country': None, 'price_country': None, 'diet_asked': None}
     if args.people is not None:
         saved['people'] = int(positive(args.people, 'people'))
     if args.calories is not None:
@@ -631,8 +729,8 @@ def set_profile(db, scope, args):
     if args.budget is not None:
         saved['budget'] = float(positive(args.budget, 'budget'))
     if args.diet is not None:
-        saved['diet'] = json.dumps([text(part, 'diet', 40) for part in args.diet.split(',')
-                                    if part.strip()])
+        saved['diet'] = json.dumps(restrictions(text(args.diet, 'diet', 200)))
+        saved['diet_asked'] = 1
     if args.lat is not None:
         saved['lat'] = float(args.lat)
     if args.lon is not None:
@@ -677,8 +775,8 @@ def set_profile(db, scope, args):
         saved['currency'] or catalogue()['currency']
     db.execute('''INSERT INTO profiles (scope, people, calories, budget, diet, lat, lon,
                   address, currency, store_location_id, age, sex, height_in, weight_lb,
-                  activity, goal, phone, country, price_country)
-                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                  activity, goal, phone, country, price_country, diet_asked)
+                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                   ON CONFLICT(scope) DO UPDATE SET people=excluded.people,
                   calories=excluded.calories, budget=excluded.budget, diet=excluded.diet,
                   lat=excluded.lat, lon=excluded.lon, address=excluded.address,
@@ -687,12 +785,12 @@ def set_profile(db, scope, args):
                   sex=excluded.sex, height_in=excluded.height_in,
                   weight_lb=excluded.weight_lb, activity=excluded.activity,
                   goal=excluded.goal, phone=excluded.phone, country=excluded.country,
-                  price_country=excluded.price_country''',
+                  price_country=excluded.price_country, diet_asked=excluded.diet_asked''',
                (scope, saved['people'], saved['calories'], saved['budget'], saved['diet'],
                 saved['lat'], saved['lon'], saved['address'], saved['currency'],
                 saved['store_location_id'], saved['age'], saved['sex'], saved['height_in'],
                 saved['weight_lb'], saved['activity'], saved['goal'], saved['phone'],
-                saved['country'], saved['price_country']))
+                saved['country'], saved['price_country'], saved['diet_asked']))
     db.commit()
     return {'profile': read_profile(db, scope)}
 
@@ -732,7 +830,7 @@ def build_plan(profile, data, start, days):
     return {'start': start.isoformat(), 'days': result, 'total_cost': total,
             'budget': budget, 'over_budget': bool(budget is not None and total > budget),
             'currency': profile['currency'], 'people': servings,
-            'calorie_target': profile['calories']}
+            'calorie_target': profile['calories'], 'diet': diet}
 
 
 def plan(db, scope, args):
@@ -740,10 +838,12 @@ def plan(db, scope, args):
     start = day_of(args.start, 'start')
     if args.action == 'show':
         return {'plan': stored_plan(db, scope, start)}
+    require_asked(profile)
     days = int(positive(args.days, 'days'))
     row = db.execute('SELECT payload, days FROM plans WHERE scope=? AND start=?',
                      (scope, start.isoformat())).fetchone()
-    if row and row['days'] == days:
+    # A week planned before they said they were vegan is not theirs any more.
+    if row and row['days'] == days and json.loads(row['payload']).get('diet') == profile['diet']:
         return {'plan': json.loads(row['payload']), 'replayed': True}
     built = build_plan(profile, catalogue(), start, days)
     db.execute('''INSERT INTO plans (scope, start, days, payload) VALUES (?,?,?,?)
@@ -789,12 +889,16 @@ def shopping(db, scope, args):
         prices = None
     stamp = (prices or {}).get('captured', '')[:10]
     confirmed = {row['item']: row for row in read_overrides(db, scope)}
+    preferred = {row['item']: row['brand'] for row in read_brands(db, scope)}
     cutoff = dt.date.today() - dt.timedelta(days=override_days())
     from_snapshot = 0
     stale, mismatched, by_hand = [], [], 0
     for held in items:
         held['quantity'] = round(held['quantity'], 2)
         estimate = round(held['cost'], 2)
+        held['preferred_brand'] = preferred.get(held['item'])
+        # None when no store was read: not stocked is a claim about a shelf.
+        held['brand_not_stocked'] = None
         said = confirmed.get(held['item'])
         if said:
             # An explicit instruction outranks a lookup — the person was in the
@@ -812,8 +916,17 @@ def shopping(db, scope, args):
                             unit_price=said['price'], median_unit_price=None)
                 by_hand += 1
                 continue
-        cost, product, value, package, rate, median = priced(
-            held['quantity'], held['unit'], (prices or {}).get('items', {}).get(held['item']))
+        rows = (prices or {}).get('items', {}).get(held['item'])
+        wanted = held['preferred_brand']
+        found = priced(held['quantity'], held['unit'],
+                       [row for row in rows or [] if carries(row, wanted)]) if wanted else None
+        if wanted and rows:
+            held['brand_not_stocked'] = found[0] is None
+        if not found or found[0] is None:
+            # Their brand is not on this shelf, so the cheapest is priced and
+            # brand_not_stocked says so. Swapping it without a word is the failure.
+            found = priced(held['quantity'], held['unit'], rows)
+        cost, product, value, package, rate, median = found
         if cost is None:
             held.update(cost=estimate, estimate=estimate, product=None, brand=None,
                         value=None, price_source='catalogue estimate',
@@ -822,6 +935,7 @@ def shopping(db, scope, args):
             continue
         held.update(cost=cost, estimate=estimate, product=product['description'],
                     brand=product.get('brand'), product_id=product.get('product_id'),
+                    packages=packages(held['quantity'], held['unit'], product),
                     value=value,
                     price_source=f"kroger:{prices['location_id']} {stamp}",
                     package_price=product.get('price'), promo=product.get('promo'),
@@ -841,6 +955,7 @@ def shopping(db, scope, args):
             'priced_from_snapshot': from_snapshot, 'confirmed_by_you': by_hand,
             'estimated': len(items) - from_snapshot - by_hand,
             'stale_overrides': stale, 'mismatched_overrides': mismatched,
+            'brands_not_stocked': [held['item'] for held in items if held['brand_not_stocked']],
             'prices_captured': stamp or None,
             'store_prices_suppressed': suppressed, 'suppressed_because': because,
             # The catalogue's figures are USD-shaped. Calling them reais because
@@ -864,6 +979,7 @@ def order(db, scope, args):
     if args.action == 'confirm':
         return confirm_order(db, scope, text(args.id, 'order id', 64))
     profile = read_profile(db, scope)
+    require_asked(profile)
     data = catalogue()
     date = day_of(args.date)
     slot = text(args.slot, 'slot', 20)
@@ -1003,6 +1119,11 @@ def parser():
     said.add_argument('--source', help='where the price came from, in their words')
     said.add_argument('--date', help='when it was seen; defaults to today')
 
+    bought = sub.add_parser('brand', help='the brand somebody buys for one ingredient')
+    bought.add_argument('action', choices=['set', 'list', 'clear'])
+    bought.add_argument('--item', help="the catalogue's ingredient name, such as yoghurt")
+    bought.add_argument('--brand', help='as printed on the pack, such as Chobani')
+
     delivery = sub.add_parser('order', help='draft an order, confirm one, or list them')
     delivery.add_argument('action', nargs='?', choices=['confirm', 'list'])
     delivery.add_argument('id', nargs='?')
@@ -1032,7 +1153,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     handlers = {'plan': plan, 'shopping': shopping, 'order': order, 'log': log, 'today': today,
                 'stores': stores, 'override': override_command, 'targets': targets,
-                'facts': facts, 'pickup': pickup}
+                'facts': facts, 'pickup': pickup, 'brand': brand_command}
     try:
         scope = text(args.scope, 'scope', 200)
         db = connect()

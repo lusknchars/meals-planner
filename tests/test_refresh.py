@@ -242,9 +242,36 @@ class Relevance(unittest.TestCase):
                                          'Kroger Cage Free Grade AA Large White Eggs'))
         self.assertTrue(refresh.relevant('black beans', 'black beans',
                                          'Kroger Black Bean Each'))
-        # "Rice Krispies Treats Bar" passes this check, and should: it names rice.
-        # Telling a grain from a cereal bar needs category knowledge a name check
-        # does not have, and pretending otherwise would be a test that lies.
+
+    def test_a_name_that_says_it_is_more_than_the_ingredient_is_not_it(self):
+        # These all name the ingredient, and while the cheapest per kilo won they
+        # never surfaced. Once the pick became what costs least to buy, 80 g of
+        # oats chose overnight oats. A name check still cannot tell a grain from a
+        # cereal bar that does not say so; it can read a name that does.
+        for ingredient, description in (
+                ('oats', 'MUSH Apple Cinnamon Overnight Oats'),
+                ('quinoa', 'Seeds of Change Organic Quinoa & Brown Rice with Garlic, 8.5 oz Pouch'),
+                ('couscous', 'Near East® Roasted Garlic & Olive Oil Couscous Mix'),
+                ('banana', 'Naked Boosted Smoothie Strawberry Banana Machine'),
+                ('courgette', 'Happy Baby Clearly Crafted Stage 2 Pears Zucchini & Peas Pouch'),
+                ('chicken breast', 'Oscar Mayer Deli Fresh Rotisserie Seasoned Chicken Breast '
+                                   'Thin Sliced Lunchmeat'),
+                ('turkey breast', 'Wellshire® Oven Roasted Turkey Breast'),
+                ('rice', 'Rice Krispies Treats Bar')):
+            term = refresh.search_term(ingredient)
+            self.assertFalse(refresh.relevant(ingredient, term, description), description)
+
+    def test_ampersands_and_plain_descriptions_still_match(self):
+        for ingredient, description in (
+                ('chickpeas', 'S&W® Premium Garbanzo Beans'),
+                ('eggs', "Pete & Gerry's® Organic Pasture Raised Large Eggs"),
+                ('shrimp', 'Kroger® Large Raw Shrimp Peeled & Deveined Tail Off'),
+                ('carrot', 'Kroger® Cut and Peeled Baby Carrots'),
+                ('spinach', 'Kroger® Tender Baby Spinach Bag Salad'),
+                ('pasta', 'Barilla Penne Pasta, Quality Non-GMO and Kosher Certified Pasta'),
+                ('butter', 'Kroger® Salted Butter Sticks')):
+            term = refresh.search_term(ingredient)
+            self.assertTrue(refresh.relevant(ingredient, term, description), description)
 
     def test_synonyms_and_spacing_do_not_reject_the_right_product(self):
         # Live, the guard threw away every chickpea Ralphs sells: the shelf calls

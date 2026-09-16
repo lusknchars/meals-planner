@@ -62,7 +62,7 @@ class InThePlan(unittest.TestCase):
                'MEALS_NUTRITION': str(self.home / 'absent.json')}
         run = lambda *a: subprocess.run([sys.executable, str(SCRIPT), '--scope', 'chat-1', *a],
                                         env=env, capture_output=True, text=True)
-        made = run('profile', 'set', '--people', '1', '--calories', '2000')
+        made = run('profile', 'set', '--people', '1', '--calories', '2000', '--diet', 'none')
         self.assertEqual(made.returncode, 0, made.stderr)
         got = run('plan', '--days', '1', '--start', '2026-09-16')
         self.assertEqual(got.returncode, 0, got.stderr)

@@ -272,6 +272,16 @@ SYNONYMS = {
 }
 
 
+# Words by which a product says it is more than the ingredient: made up, mixed,
+# flavoured, or sold as something else. Whole words only, and never when the
+# ingredient's own name uses the word. "&" and "and" are not here: the shelf
+# writes "S&W Garbanzo Beans" and "Peeled and Deveined Shrimp".
+NOT_THE_INGREDIENT = frozenset((
+    'overnight', 'smoothie', 'mix', 'with', 'seasoned', 'rotisserie', 'deli', 'lunchmeat',
+    'roasted', 'stage', 'cereal', 'bar', 'bars', 'treats', 'flavored', 'flavoured',
+    'cinnamon', 'vanilla', 'chocolate', 'honey'))
+
+
 def _phrase_matches(phrase, text, compact):
     """Every word of the phrase present, trimmed for plurals; failing that, the
     phrase with separators removed — the shelf writes "Chick Peas" for chickpeas."""
@@ -304,9 +314,10 @@ def relevant(ingredient, search, description):
     Yogurt", "chickpeas" matches both "Garbanzo Beans" and "Chick Peas", and
     "banana" matches no plantain.
 
-    This is a name check, not a category check. It cannot tell a grain from a
-    cereal bar named after one, so the cheapest relevant row can still be an odd
-    choice; it only keeps out products that never claim to be the ingredient.
+    This is a name check, not a category check. It keeps out products that never
+    claim to be the ingredient, and products whose name says they are more than
+    it: overnight oats, a couscous mix, a deli turkey. A cereal bar that does not
+    call itself one still gets through.
     """
     text = (description or '').lower()
     compact = re.sub(r'[^a-z0-9]', '', text)
@@ -315,6 +326,9 @@ def relevant(ingredient, search, description):
     # "plain yogurt" would let a blueberry dessert cup through on the bare word.
     phrase = (search or ingredient or '').strip().lower()
     if not phrase:
+        return False
+    own = set(re.findall(r'[a-z]+', f'{phrase} {(ingredient or "").lower()}'))
+    if (set(re.findall(r'[a-z]+', text)) & NOT_THE_INGREDIENT) - own:
         return False
     names = [phrase]
     # A synonym renames one word and keeps the rest of the phrase qualified.

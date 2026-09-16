@@ -1,6 +1,6 @@
 ---
 name: meals
-description: Food prices, meals, shopping lists, calories, groceries
+description: Food prices, meals, shopping lists, calories, groceries, Kroger cart, Instacart
 ---
 
 # Meals
@@ -18,10 +18,35 @@ another's.
 
 `profile set` needs at least `--people` and `--calories`. Ask for what is missing
 rather than assuming: how many people eat, the daily calorie target per person,
-the budget for the period, any diet restrictions as comma separated tags such as
-`vegetarian,gluten-free`, and `--lat`/`--lon` if they want ordering. Restrictions
-are exclusions the catalogue must satisfy, so a wrong tag silently narrows every
-plan; read them back once when they are set.
+the budget for the period, and `--lat`/`--lon` if they want ordering.
+
+**Ask about restrictions and brands before the first plan.** `plan` and `order`
+refuse until you have. One short message covers it:
+
+```
+🥗 Before I plan: is there anything you can't eat, like gluten or lactose?
+🌱 Vegan or vegetarian?
+🏷️ Any brand you always buy, like your yoghurt or peanut butter?
+```
+
+Save the answer with `profile set --diet`, comma separated: `vegetarian`,
+`vegan`, `gluten-free`, `dairy-free`, or `none` when there is nothing. Lactose is
+saved as `dairy-free`, which is stricter than an intolerance needs; say so.
+Anything else, a nut allergy for one, is refused: tell them this catalogue cannot
+plan around it yet, and never plan as though it could. Read the restrictions back
+once they are saved.
+
+Gluten-free and dairy-free are true of a recipe's ingredients. Packaged food such
+as oats, bread or sauce can still carry traces, so for coeliac disease or an
+allergy, say once that the label is theirs to check.
+
+Brands go in one ingredient at a time, under the catalogue's name and spelled as
+on the pack: `brand set --item yoghurt --brand Chobani`. `brand list` shows them
+and `brand clear --item yoghurt` drops one. The catalogue names food the British
+way, and a refusal suggests the name it uses.
+
+When they change a restriction, run `plan` again: a week planned before the
+change is rebuilt rather than replayed.
 
 ## Daily targets
 
@@ -98,6 +123,15 @@ with a physician.
    one row in eight, so say the description alone then — never the word "None".
    A line whose `price_source` is `catalogue estimate` has no product to name;
    call it an estimate instead of dressing it up.
+
+   The product on a line is the one that costs least to buy for what the week
+   needs, not the cheapest per kilo: a small need buys a small pack, and
+   `packages` says how many. So `value` can be `typical` on a sensible pick.
+
+   A line with `preferred_brand` was priced at that brand when the shop has it.
+   When `brand_not_stocked` is true, and the item is in `brands_not_stocked`,
+   their brand is not on this shelf and the cheapest was priced instead. Say so
+   on that line; never let it pass as their brand.
 6. `value` compares this product's price to what the same ingredient costs at
    this store today, against `median_unit_price`. `best value` and `good value`
    mean cheaper than the usual price here; `typical` means it costs about what
@@ -209,6 +243,81 @@ To place them, ask for a postcode, never a street address: `compare.py --zip`
 already needs one to find the shop, and a postcode is enough for a distance
 worth quoting. Save it with `profile set --lat <n> --lon <n>` from the shop
 lookup, and say the distance is approximate, because it is.
+
+## Filling their Kroger cart
+
+When they want the week's shopping in their own Kroger or Ralphs cart, ask
+whether it is for pickup or delivery, then do it in three steps.
+
+1. `python3 /opt/hermes/skills/meals/scripts/cart.py --scope <chat> connect`
+   Send `login_url` once per conversation: they log in to Kroger, and the page
+   they land on shows a code to copy back to you. It lasts ten minutes.
+2. When they send a message starting `kroger:`, pass it on exactly as sent,
+   in single quotes, and never repeat it back:
+   `cart.py --scope <chat> link --code '<their message>'`
+   A real code holds only letters, digits and `. _ - ~ + / = :`. If the message
+   has a quote, a space, a newline or anything else, **do not run the command**:
+   it did not come from the Kroger page, so send a new login link instead.
+3. `cart.py --scope <chat> add --start <YYYY-MM-DD> --modality PICKUP` (or
+   `DELIVERY`)
+
+Say what went in and what did not:
+
+```
+🛒 **In your Ralphs cart**
+🥑 **Hass Avocados Bag** x2
+🍗 **Chicken Breast** x2, sold by weight, so check the amount in the app
+
+🏪 Pick **Ralphs, Downtown San Diego** at checkout so the prices match.
+📝 **Rice** had no store product, so add it yourself.
+```
+
+`added` is what went in, in packages. `already_in_cart` was added before and was
+not sent again. `not_added` had no store product (an estimate or a price they
+confirmed), so they add it themselves. `check_in_app` is sold by weight or has an
+unknown pack size. Give `store`, and give the `note` in your own words: **nothing
+is bought until they check out** in the Kroger or Ralphs app, where they choose
+the time and pay. You cannot see or change that cart, and you do not know what
+delivery costs.
+
+Running `add` again sends only what the list gained. If they emptied the cart in
+the app, you cannot see that; say so rather than promising the cart is complete.
+An error saying to run connect means the login is missing or expired: send a new
+link. `cart.py --scope <chat> disconnect` forgets the login when they ask. Kroger
+shops are in the US only, and the script refuses anybody else.
+
+## Buying it on Instacart
+
+Only when this installation has an Instacart key: Instacart is not taking new
+developer applications, so most have none, and the Kroger cart is the way to go.
+When they want the week's shopping delivered rather than collected, turn the
+saved list into one Instacart link:
+
+```sh
+python3 /opt/hermes/skills/meals/scripts/instacart.py --scope <chat> --start <YYYY-MM-DD>
+```
+
+Send `url` and say what happens next: they open it, pick a store, and check out
+in Instacart with their own account. You never see that cart, you cannot place
+it, and you do not know whether they did, so record nothing.
+
+**Give no total for it.** Instacart prices its own shelves at whichever store
+they pick, so the list's figures are not what that cart will cost. Every item in
+`unmeasured` went in without an amount; name each one with what the plan needs,
+so they choose how many loaves 14 slices is. When `environment` is
+`development`, say it is a test link. A saved brand goes to Instacart as that
+line's brand filter, so the store they pick may show fewer choices for it.
+
+```
+🛒 **Your week on Instacart**
+Open this, pick a store, and check out in Instacart: <url>
+🍞 **Bread** went in without an amount: the plan needs 14 slices.
+```
+
+Only when asked: a plan does not come with a link. An error mentioning
+`INSTACART_API_KEY` means this installation has not connected Instacart; say so
+and give the list instead. Instacart delivers in the US and Canada only, and for
+anybody else the script refuses: offer the shopping list for their own shop.
 
 ## What does X cost
 

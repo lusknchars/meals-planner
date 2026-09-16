@@ -116,7 +116,8 @@
    ],
    "slot": "breakfast",
    "tags": [
-    "vegetarian"
+    "vegetarian",
+    "dairy-free"
    ],
    "title": "Avocado toast with a fried egg"
   },
@@ -142,7 +143,8 @@
    "slot": "breakfast",
    "tags": [
     "meat",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Bacon and eggs"
   },
@@ -333,7 +335,9 @@
    "slot": "breakfast",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Oats with banana and peanut butter"
   },
@@ -364,7 +368,9 @@
    ],
    "slot": "breakfast",
    "tags": [
-    "vegetarian"
+    "vegetarian",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Peanut butter and banana on toast"
   },
@@ -460,7 +466,8 @@
    "slot": "breakfast",
    "tags": [
     "meat",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Turkey and egg scramble with potatoes"
   },
@@ -491,7 +498,8 @@
    ],
    "slot": "lunch",
    "tags": [
-    "meat"
+    "meat",
+    "dairy-free"
    ],
    "title": "Beef and tomato pasta"
   },
@@ -523,7 +531,8 @@
    "slot": "lunch",
    "tags": [
     "meat",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Chicken and quinoa bowl with peppers"
   },
@@ -555,7 +564,8 @@
    "slot": "lunch",
    "tags": [
     "meat",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Chicken, rice and broccoli"
   },
@@ -593,7 +603,9 @@
    "slot": "lunch",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Chickpea salad"
   },
@@ -663,7 +675,9 @@
    "slot": "lunch",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Lentils, rice and greens"
   },
@@ -701,7 +715,9 @@
    "slot": "lunch",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Lentil and cauliflower curry"
   },
@@ -770,7 +786,8 @@
    "slot": "lunch",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Rice, beans, egg and kale"
   },
@@ -802,7 +819,8 @@
    "slot": "lunch",
    "tags": [
     "fish",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Prawns with rice and peas"
   },
@@ -833,7 +851,8 @@
    ],
    "slot": "lunch",
    "tags": [
-    "fish"
+    "fish",
+    "dairy-free"
    ],
    "title": "Tuna and couscous salad"
   },
@@ -865,7 +884,8 @@
    "slot": "lunch",
    "tags": [
     "meat",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Turkey with rice and green beans"
   },
@@ -896,7 +916,9 @@
    ],
    "slot": "lunch",
    "tags": [
-    "vegetarian"
+    "vegetarian",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Pasta with tomato and courgette"
   },
@@ -928,7 +950,8 @@
    "slot": "dinner",
    "tags": [
     "meat",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Beef with potatoes and peas"
   },
@@ -966,7 +989,9 @@
    "slot": "dinner",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Black bean soup"
   },
@@ -1004,7 +1029,9 @@
    "slot": "dinner",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Black bean and sweet corn bowl"
   },
@@ -1042,7 +1069,9 @@
    "slot": "dinner",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Chickpea and spinach stew"
   },
@@ -1112,7 +1141,8 @@
    "slot": "dinner",
    "tags": [
     "fish",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Salmon, potatoes and spinach"
   },
@@ -1150,7 +1180,8 @@
    "slot": "dinner",
    "tags": [
     "fish",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Salmon with sweet corn, broccoli and potatoes"
   },
@@ -1187,7 +1218,8 @@
    ],
    "slot": "dinner",
    "tags": [
-    "fish"
+    "fish",
+    "dairy-free"
    ],
    "title": "Garlic prawns with couscous"
   },
@@ -1219,7 +1251,9 @@
    "slot": "dinner",
    "tags": [
     "vegetarian",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Sweet potato and quinoa bowl"
   },
@@ -1256,7 +1290,9 @@
    ],
    "slot": "dinner",
    "tags": [
-    "vegetarian"
+    "vegetarian",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Tofu and cauliflower with rice"
   },
@@ -1293,7 +1329,9 @@
    ],
    "slot": "dinner",
    "tags": [
-    "vegetarian"
+    "vegetarian",
+    "dairy-free",
+    "vegan"
    ],
    "title": "Tofu stir fry"
   },
@@ -1331,7 +1369,8 @@
    "slot": "dinner",
    "tags": [
     "fish",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Tuna and potato salad with green beans"
   },
@@ -1369,7 +1408,8 @@
    "slot": "dinner",
    "tags": [
     "meat",
-    "gluten-free"
+    "gluten-free",
+    "dairy-free"
    ],
    "title": "Roast turkey with sweet potato and green beans"
   },

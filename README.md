@@ -11,11 +11,14 @@ prepares an order from places near you.
 - **Plan** a week of meals with calories and cost per day, plus one shopping list.
 - **Order** a meal: options ranked by price, distance and how they fit the
   calories you have left. The agent prepares the order; you confirm it.
+- **Fill your Kroger cart** with the week's shopping, for pickup or delivery. You
+  check out and pay in the Kroger or Ralphs app.
 - **Track** what you actually ate and see what's left for the day.
 
-The skill's own store lives in the installation's Hermes home. Nothing is sent
-anywhere except the conversation you are texting from. The agent holds no payment
-method and opens no delivery account, so it never places an order for you.
+The skill's own store lives in the installation's Hermes home. Your shopping list
+leaves the installation only when you ask for it to go into your Kroger cart. The agent holds
+no payment method and opens no delivery account, so it never places an order for
+you.
 
 ## Install
 
@@ -41,6 +44,24 @@ identity.
 The container reports token usage to the Agent Index every five minutes. An agent
 whose owner does not want that is one built without the `image/s6-overlay`
 service.
+
+## Restrictions and brands
+
+Before the first plan the agent asks three things: anything you cannot eat, such
+as gluten or lactose; whether you are vegan or vegetarian; and whether you always
+buy a particular brand. This is a gate, not a suggestion: `plan` and `order`
+refuse until the answer is saved, and "none" is an answer.
+
+- **Restrictions** are `vegetarian`, `vegan`, `gluten-free` and `dairy-free`.
+  Everyday words map onto them, so lactose plans dairy-free. Anything else, such
+  as a nut allergy, is refused rather than saved and ignored.
+- **The shipped recipes** are tagged vegan and dairy-free from their ingredients,
+  and a test holds those tags to the ingredient lists.
+- **Changing a restriction** rebuilds a saved week instead of replaying one you
+  can no longer eat.
+- **Brands** are per ingredient (`brand set --item yoghurt --brand Chobani`). The
+  shopping list prices your brand when the store stocks it, even when dearer,
+  and says so when it does not. On Instacart the brand filters that line.
 
 ## Real stores and real prices
 
@@ -71,6 +92,15 @@ Each shopping-list line then says where its figure came from:
 package size can't be converted to the recipe's unit — a 32 oz bag has a per-kilo
 price, "family pack" does not, and the agent admits the difference instead of
 inventing one.
+
+The product on a line is the one that costs least to buy for what the week
+needs, not the cheapest per kilo. 380 g of chicken used to pick an 8 lb frozen
+bag at $20.00, the best rate on the shelf; it now picks a 1 lb pack from the
+counter at $2.50. On one real Ralphs week that took the shop from $162.35 to
+$106.28. Each line says how many `packages` that is, and the Kroger cart adds
+exactly those. Product names that say they are more than the ingredient
+(overnight oats, a couscous mix, deli turkey) are not counted as it; rebuild
+older snapshots with `refresh.py prices` to apply that.
 
 ### What "best value" means
 
@@ -110,6 +140,79 @@ honest:
   not from the catalogue, but it never enters a plan or a total until you confirm
   it as an override. Every number in a total can name its origin: a store's API,
   a price you confirmed, or the catalogue.
+
+## Your Kroger cart
+
+Ask for the week's shopping in your cart, say pickup or delivery, and the agent
+adds the products it priced, your preferred brands included, to your own Kroger
+or Ralphs cart. Kroger's cart API only adds: it cannot read the cart or check
+out, so you choose the time and pay in the Kroger or Ralphs app. The agent holds
+no card and nothing is bought until you check out.
+
+**Setup, once, in your app at [developer.kroger.com](https://developer.kroger.com):**
+
+1. Make sure the app includes the **Cart** API alongside Products and Locations.
+2. Add this redirect URI: `https://lusknchars.github.io/meals-planner/kroger/`
+
+**Each person, once:** the agent texts a Kroger login link. After logging in they
+land on that page, which shows a code starting `kroger:` to copy back into the
+chat. The agent has no public address for Kroger to send them back to, which is
+why the page exists. It is static, loads nothing from anywhere else, sends no
+referrer, and clears the code from the address bar. A code alone is useless: it
+works once, within ten minutes, and only with your client secret and the PKCE
+verifier the installation kept.
+
+What `skills/meals/scripts/cart.py` guards, tested in `tests/test_cart.py`:
+
+- **Packages, not ingredients.** Five avocados from bags of four is two bags.
+  Food sold by weight goes in by the pound and is flagged to check in the app.
+- **No doubled cart.** Adding the same list again sends nothing; a bigger list
+  sends only the difference. It cannot see what you removed in the app.
+- **Named gaps.** A line priced from the catalogue or by you has no store
+  product, so it is listed for you to add rather than guessed.
+- **Logins stay put.** A code from another conversation, a stale one, or one
+  with characters no login produces is refused. Tokens never appear in replies,
+  refresh on their own, and `disconnect` forgets them.
+
+To host the page yourself, publish `pages/kroger/` anywhere static and set
+`KROGER_REDIRECT_URI` to it. This repository publishes it from the `gh-pages`
+branch.
+
+## Delivery through Instacart
+
+Instacart's developer program is not accepting new applications (September
+2026), and it is open only to residents or registered businesses of the US and
+Canada, so most installations will leave this off. Without a key the agent says
+Instacart is not connected and offers the list instead.
+
+Ask for the week's shopping on Instacart and the agent sends one link built from
+the saved list. You open it, pick a store and check out in Instacart with your
+own account. The agent holds no card, never sees that cart and places nothing.
+
+It needs a key from the [Instacart Developer Dashboard](https://dashboard.instacart.com)
+in `.env`:
+
+```sh
+INSTACART_API_KEY=keys.xxxxxxxx
+INSTACART_ENV=development   # production once Instacart approves your production key
+```
+
+A development key works at once against Instacart's test server. A production
+key stays pending until Instacart reviews the app. Instacart delivers in the US
+and Canada, so a number from anywhere else gets the shopping list and no link.
+
+What the script does on the way, tested in `tests/test_instacart.py`:
+
+- **Units Instacart matches.** Grams, millilitres and whole counts go in as
+  measured; a slice count has no Instacart unit, so it goes in unmeasured and the
+  agent names the amount the plan needs.
+- **American names.** Courgette is searched as zucchini, yoghurt as yogurt.
+- **Instacart's link or none.** A returned address that is not on Instacart's own
+  domains is refused rather than sent to somebody's phone.
+- **One page per list.** The same list reuses its saved link until a day before
+  it expires, as Instacart asks; a changed list gets a new one.
+- **No total.** Instacart prices its own shelves at the store you pick, so the
+  agent gives no figure for that cart.
 
 ## Targets and macros
 
@@ -174,6 +277,7 @@ plan against your own recipes.
 | `index.py` | The pinned Agent Index client, for publishing and reporting |
 | `tests/` | Script tests, run without a model |
 | `image/` | Supervised services for the container build |
+| `pages/kroger/` | The static page Kroger sends people to after login |
 
 ## Tests
 
