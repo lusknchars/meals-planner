@@ -242,9 +242,13 @@ exec /command/s6-setuidgid hermes env HOME=/var/lib/hermes HERMES_HOME=/var/lib/
   --register --agent meals-planner --name "Meals Planner" \
   --blurb "..." --repo https://github.com/lusknchars/meals-planner --runtime Hermes \
   --install-url https://github.com/lusknchars/meals-planner/blob/main/README.md \
-  --video https://example.com/your-demo --image https://example.com/your-screenshot.png
+  --video <YouTube video id> --image https://example.com/your-screenshot.png
 '
 ```
+
+`--video` takes the id, not a link: for `youtube.com/shorts/6HgmhqNmGfU` it is
+`6HgmhqNmGfU`, because the page embeds the player by id. `--image` repeats, one
+public image URL each.
 
 An `--install-url` with a `#fragment` is rejected: the client reports
 `some values were not stored: {'install_url': 1}` and keeps the rest.
