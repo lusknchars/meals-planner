@@ -51,6 +51,27 @@ Calories and prices come from the catalogue shipped with this skill. They are
 reference figures for planning, not a measurement of what someone cooks, and
 never a nutritional or medical assessment.
 
+## Prices you find on the web
+
+A price you read on a web page never enters a plan, a shopping list or a total.
+Not as a correction, not "just this once", not even when it is obviously better
+than the catalogue estimate. Totals are auditable because every number in them
+can name its origin: a store's own API, a price the person confirmed, or the
+catalogue. A web figure has none of that, and a plan containing one looks exactly
+like a plan that does not.
+
+You may still look one up and say it, clearly marked as not from the catalogue.
+Then offer it: `override set --item <name> --price <n> --unit <recipe unit>
+--source "<where you saw it>"` records it against this conversation, and the
+person confirming is what makes it usable. Say what changes before you run it.
+
+A confirmed price expires — fourteen days by default. `shopping` reports
+`stale_overrides`, and those lines fall back to the estimate rather than quietly
+reusing an old number. When that happens, offer to check the price again instead
+of extending it. `mismatched_overrides` names a price recorded in the wrong unit:
+a per-kilo figure cannot pay for a recipe that counts bananas, and the fix is a
+new override in the recipe's unit, never a conversion you invent.
+
 ## Ordering
 
 `order --slot dinner [--craving pizza] [--max-distance-km 5]` ranks venues by

@@ -81,6 +81,32 @@ nutrition or whether the food is worth buying, and both numbers are on the line
 so the claim can be checked. Sale prices count: Kroger cage-free eggs at $4.39
 with a $2.79 promo are compared at $0.155 each, not $0.24.
 
+### Prices you confirm yourself
+
+Some prices no API will sell you. Ralphs weighs bananas, the recipe counts them,
+and no free API publishes a per-piece produce price — so the only honest source
+is a person who looked.
+
+```sh
+# in a conversation with the agent, or directly:
+meals.py --scope <chat> override set --item banana --price 0.22 --unit un \
+  --source "Trader Joe's (web, 16 Sep)"
+```
+
+That line then reads `you confirmed 2026-09-16 (Trader Joe's (web, 16 Sep))`
+instead of `catalogue estimate`, and counts in the total. Three rules keep it
+honest:
+
+- **It expires.** Fourteen days by default, `MEALS_OVERRIDE_DAYS` to change it.
+  A stale one is refused, listed in `stale_overrides`, and the line falls back to
+  the estimate rather than quietly reusing an old number.
+- **The unit must match the recipe's.** A per-kilo price cannot pay for a recipe
+  that counts bananas; it is reported in `mismatched_overrides`, never converted.
+- **A web price is not a price.** The agent may look one up and say it, marked as
+  not from the catalogue, but it never enters a plan or a total until you confirm
+  it as an override. Every number in a total can name its origin: a store's API,
+  a price you confirmed, or the catalogue.
+
 ## Venues are sample data
 
 The shipped catalogue's restaurants are samples placed around one city so the

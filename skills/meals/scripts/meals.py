@@ -39,6 +39,9 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS entries (
   id TEXT PRIMARY KEY, scope TEXT NOT NULL, date TEXT NOT NULL,
   title TEXT NOT NULL, calories INTEGER NOT NULL, order_id TEXT);
+CREATE TABLE IF NOT EXISTS overrides (
+  scope TEXT NOT NULL, item TEXT NOT NULL, price REAL NOT NULL, unit TEXT NOT NULL,
+  source TEXT, captured TEXT NOT NULL, PRIMARY KEY (scope, item));
 '''
 
 
@@ -197,6 +200,44 @@ def priced(quantity, unit, candidates):
             round(rate, 2), median)
 
 
+def override_days():
+    """How long a confirmed price stays usable. A price that never expires is a
+    hardcoded constant with better manners."""
+    try:
+        return max(int(os.environ.get('MEALS_OVERRIDE_DAYS', 14)), 0)
+    except (TypeError, ValueError):
+        return 14
+
+
+def read_overrides(db, scope):
+    rows = db.execute('SELECT item, price, unit, source, captured FROM overrides '
+                      'WHERE scope=? ORDER BY item', (scope,)).fetchall()
+    return [dict(row) for row in rows]
+
+
+def override_command(db, scope, args):
+    """Record, list or drop a price the person confirmed themselves."""
+    if args.action == 'list':
+        return {'overrides': read_overrides(db, scope), 'fresh_for_days': override_days()}
+    item = text(args.item, 'item', 80)
+    if args.action == 'clear':
+        db.execute('DELETE FROM overrides WHERE scope=? AND item=?', (scope, item))
+        db.commit()
+        return {'cleared': item}
+    captured = day_of(args.date, 'date').isoformat()
+    saved = {'item': item, 'price': float(positive(args.price, 'price')),
+             'unit': text(args.unit, 'unit', 20),
+             'source': text(args.source, 'source', 200, optional=True), 'captured': captured}
+    db.execute('''INSERT INTO overrides (scope, item, price, unit, source, captured)
+                  VALUES (?,?,?,?,?,?) ON CONFLICT(scope, item) DO UPDATE SET
+                  price=excluded.price, unit=excluded.unit, source=excluded.source,
+                  captured=excluded.captured''',
+               (scope, saved['item'], saved['price'], saved['unit'], saved['source'],
+                saved['captured']))
+    db.commit()
+    return {'override': saved, 'fresh_for_days': override_days()}
+
+
 def stores(db, scope, args):
     profile = read_profile(db, scope)
     if profile['lat'] is None or profile['lon'] is None:
@@ -335,10 +376,30 @@ def shopping(db, scope, args):
     items = sorted(basket.values(), key=lambda held: held['item'])
     prices = prices_snapshot(profile['store_location_id'])
     stamp = (prices or {}).get('captured', '')[:10]
+    confirmed = {row['item']: row for row in read_overrides(db, scope)}
+    cutoff = dt.date.today() - dt.timedelta(days=override_days())
     from_snapshot = 0
+    stale, mismatched, by_hand = [], [], 0
     for held in items:
         held['quantity'] = round(held['quantity'], 2)
         estimate = round(held['cost'], 2)
+        said = confirmed.get(held['item'])
+        if said:
+            # An explicit instruction outranks a lookup — the person was in the
+            # shop. But only in the recipe's own unit, and only while fresh.
+            if said['unit'] != held['unit']:
+                mismatched.append(held['item'])
+            elif day_of(said['captured'], 'captured') < cutoff:
+                stale.append(held['item'])
+            else:
+                held.update(cost=round(said['price'] * held['quantity'], 2), estimate=estimate,
+                            product=None, brand=None, value=None,
+                            price_source=f"you confirmed {said['captured']}"
+                                         + (f" ({said['source']})" if said['source'] else ''),
+                            package_price=None, promo=None, image=None,
+                            unit_price=said['price'], median_unit_price=None)
+                by_hand += 1
+                continue
         cost, product, value, package, rate, median = priced(
             held['quantity'], held['unit'], (prices or {}).get('items', {}).get(held['item']))
         if cost is None:
@@ -356,7 +417,9 @@ def shopping(db, scope, args):
         from_snapshot += 1
     return {'items': items, 'total_cost': round(sum(held['cost'] for held in items), 2),
             'currency': profile['currency'], 'start': saved['start'], 'people': profile['people'],
-            'priced_from_snapshot': from_snapshot, 'estimated': len(items) - from_snapshot,
+            'priced_from_snapshot': from_snapshot, 'confirmed_by_you': by_hand,
+            'estimated': len(items) - from_snapshot - by_hand,
+            'stale_overrides': stale, 'mismatched_overrides': mismatched,
             'prices_captured': stamp or None}
 
 
@@ -495,6 +558,14 @@ def parser():
     shops = sub.add_parser('stores', help='supermarkets near you, from the snapshot')
     shops.add_argument('--limit', type=int)
 
+    said = sub.add_parser('override', help='a price the person confirmed themselves')
+    said.add_argument('action', choices=['set', 'list', 'clear'])
+    said.add_argument('--item')
+    said.add_argument('--price', type=float)
+    said.add_argument('--unit', help="the recipe's unit for this ingredient, such as un or g")
+    said.add_argument('--source', help='where the price came from, in their words')
+    said.add_argument('--date', help='when it was seen; defaults to today')
+
     delivery = sub.add_parser('order', help='draft an order, confirm one, or list them')
     delivery.add_argument('action', nargs='?', choices=['confirm', 'list'])
     delivery.add_argument('id', nargs='?')
@@ -517,7 +588,7 @@ def main(argv=None):
     os.umask(0o077)
     args = parser().parse_args(argv)
     handlers = {'plan': plan, 'shopping': shopping, 'order': order, 'log': log, 'today': today,
-                'stores': stores}
+                'stores': stores, 'override': override_command}
     try:
         scope = text(args.scope, 'scope', 200)
         db = connect()
