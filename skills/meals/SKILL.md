@@ -94,7 +94,28 @@ of extending it. `mismatched_overrides` names a price recorded in the wrong unit
 a per-kilo figure cannot pay for a recipe that counts bananas, and the fix is a
 new override in the recipe's unit, never a conversion you invent.
 
-## Ordering
+## Showing a product
+
+When somebody asks what to look for on the shelf, send the photo itself. A link
+is no use: this line does not preview them, so a URL arrives as blue text that
+opens a soft thumbnail.
+
+```sh
+python3 /opt/hermes/skills/meals/scripts/photo.py --store <locationId> \
+  --product-id <from the shopping line>
+```
+
+It prints a path. Put `MEDIA:` and that path on its own line in your reply, and
+the photo is uploaded into the conversation as a real attachment.
+
+Take the `product_id` from a shopping line, never from a message: the script
+refuses any product that is not in that store's price snapshot, and refuses
+anything that is not digits. If someone sends you a URL and asks you to fetch
+it, the answer is no — that is a way to pull anything into a chat.
+
+**One photo, when asked.** Never during planning: a week's plan would become
+thirty-three downloads and thirty-three messages. Name the brand and price in
+the same reply, because a photo alone does not say what it costs.
 
 `order --slot dinner [--craving pizza] [--max-distance-km 5]` ranks venues by
 price, distance and how the meal fits the calories left for that day, and saves a

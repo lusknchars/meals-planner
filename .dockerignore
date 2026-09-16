@@ -12,3 +12,7 @@
 !image/**
 **/__pycache__
 **/*.pyc
+**/prices.*.json
+**/nutrition.rejected.json
+**/plow-credentials
+**/.env

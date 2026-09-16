@@ -590,7 +590,8 @@ def shopping(db, scope, args):
                         unit_price=None, median_unit_price=None)
             continue
         held.update(cost=cost, estimate=estimate, product=product['description'],
-                    brand=product.get('brand'), value=value,
+                    brand=product.get('brand'), product_id=product.get('product_id'),
+                    value=value,
                     price_source=f"kroger:{prices['location_id']} {stamp}",
                     package_price=product.get('price'), promo=product.get('promo'),
                     image=product.get('image'), unit_price=rate,
