@@ -427,6 +427,7 @@ def currency_for(country):
     return COUNTRY_CURRENCY.get((country or '').strip().upper()) or None
 # The order a shop is walked, not the order the alphabet falls in. "Other" is
 # last and always exists: an ingredient nobody categorised still has to be bought.
+SLOT_EMOJI = {'breakfast': '🍳', 'lunch': '🥗', 'dinner': '🍽️'}
 SECTION_ORDER = ('Produce', 'Bakery', 'Meat & Fish', 'Dairy', 'Pantry', 'Frozen', 'Other')
 # One per section, so a list scans at a glance on a phone. Kept here rather than
 # left to the model: the same food should not be a different symbol each week.
@@ -668,6 +669,10 @@ def build_plan(profile, data, start, days):
             # the same week returns the same plan.
             recipe = options[index % len(options)]
             meals.append({'slot': slot, 'recipe_id': recipe['id'], 'title': recipe['title'],
+                          # Shipped with the recipe so a dish keeps one face. A
+                          # catalogue of the owner's own may carry none, which is
+                          # why the slot answers for it rather than the plan failing.
+                          'emoji': recipe.get('emoji') or SLOT_EMOJI[slot],
                           'calories': recipe['calories'],
                           'cost': round(recipe['cost'] * servings, 2)})
         result.append({'date': date.isoformat(), 'meals': meals,

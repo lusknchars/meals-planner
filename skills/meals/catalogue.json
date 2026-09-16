@@ -60,6 +60,7 @@
   {
    "calories": 490,
    "cost": 2.6,
+   "emoji": "\ud83c\udf4f",
    "id": "apple-almond-yoghurt",
    "ingredients": [
     {
@@ -91,6 +92,7 @@
   {
    "calories": 520,
    "cost": 1.8,
+   "emoji": "\ud83e\udd51",
    "id": "avocado-toast-egg",
    "ingredients": [
     {
@@ -121,6 +123,7 @@
   {
    "calories": 560,
    "cost": 2.2,
+   "emoji": "\ud83e\udd53",
    "id": "bacon-eggs",
    "ingredients": [
     {
@@ -146,6 +149,7 @@
   {
    "calories": 430,
    "cost": 2.0,
+   "emoji": "\ud83e\udd64",
    "id": "banana-smoothie",
    "ingredients": [
     {
@@ -177,6 +181,7 @@
   {
    "calories": 460,
    "cost": 5.02,
+   "emoji": "\ud83c\udf53",
    "id": "cottage-berries",
    "ingredients": [
     {
@@ -208,6 +213,7 @@
   {
    "calories": 520,
    "cost": 1.9,
+   "emoji": "\ud83c\udf73",
    "id": "eggs-toast",
    "ingredients": [
     {
@@ -238,6 +244,7 @@
   {
    "calories": 470,
    "cost": 3.0,
+   "emoji": "\ud83e\udd63",
    "id": "oats-berries",
    "ingredients": [
     {
@@ -269,6 +276,7 @@
   {
    "calories": 510,
    "cost": 3.03,
+   "emoji": "\ud83c\udf4a",
    "id": "orange-cottage-bowl",
    "ingredients": [
     {
@@ -300,6 +308,7 @@
   {
    "calories": 540,
    "cost": 1.37,
+   "emoji": "\ud83e\udd5c",
    "id": "peanut-banana-oats",
    "ingredients": [
     {
@@ -331,6 +340,7 @@
   {
    "calories": 440,
    "cost": 1.4,
+   "emoji": "\ud83c\udf5e",
    "id": "peanut-banana-toast",
    "ingredients": [
     {
@@ -361,6 +371,7 @@
   {
    "calories": 450,
    "cost": 2.0,
+   "emoji": "\ud83e\uddc0",
    "id": "tapioca-cheese",
    "ingredients": [
     {
@@ -386,6 +397,7 @@
   {
    "calories": 440,
    "cost": 3.8,
+   "emoji": "\ud83c\udf45",
    "id": "tomato-feta-eggs",
    "ingredients": [
     {
@@ -417,6 +429,7 @@
   {
    "calories": 480,
    "cost": 5.15,
+   "emoji": "\ud83e\udd83",
    "id": "turkey-egg-scramble",
    "ingredients": [
     {
@@ -454,6 +467,7 @@
   {
    "calories": 700,
    "cost": 4.14,
+   "emoji": "\ud83c\udf5d",
    "id": "beef-pasta",
    "ingredients": [
     {
@@ -484,6 +498,7 @@
   {
    "calories": 670,
    "cost": 5.81,
+   "emoji": "\ud83c\udf57",
    "id": "chicken-quinoa-bowl",
    "ingredients": [
     {
@@ -515,6 +530,7 @@
   {
    "calories": 720,
    "cost": 4.0,
+   "emoji": "\ud83c\udf57",
    "id": "chicken-rice",
    "ingredients": [
     {
@@ -546,6 +562,7 @@
   {
    "calories": 600,
    "cost": 2.6,
+   "emoji": "\ud83e\udd57",
    "id": "chickpea-salad",
    "ingredients": [
     {
@@ -583,6 +600,7 @@
   {
    "calories": 680,
    "cost": 2.59,
+   "emoji": "\ud83e\uddc6",
    "id": "feta-chickpea-salad",
    "ingredients": [
     {
@@ -620,6 +638,7 @@
   {
    "calories": 650,
    "cost": 2.5,
+   "emoji": "\ud83c\udf72",
    "id": "lentil-bowl",
    "ingredients": [
     {
@@ -651,6 +670,7 @@
   {
    "calories": 680,
    "cost": 3.31,
+   "emoji": "\ud83c\udf5b",
    "id": "lentil-cauliflower-curry",
    "ingredients": [
     {
@@ -688,6 +708,7 @@
   {
    "calories": 680,
    "cost": 3.05,
+   "emoji": "\ud83e\uddc0",
    "id": "mozzarella-tomato-pasta",
    "ingredients": [
     {
@@ -718,6 +739,7 @@
   {
    "calories": 700,
    "cost": 2.45,
+   "emoji": "\ud83c\udf5a",
    "id": "rice-beans-egg",
    "ingredients": [
     {
@@ -755,6 +777,7 @@
   {
    "calories": 680,
    "cost": 7.29,
+   "emoji": "\ud83c\udf64",
    "id": "shrimp-rice-peas",
    "ingredients": [
     {
@@ -786,6 +809,7 @@
   {
    "calories": 630,
    "cost": 3.69,
+   "emoji": "\ud83d\udc1f",
    "id": "tuna-couscous",
    "ingredients": [
     {
@@ -816,6 +840,7 @@
   {
    "calories": 690,
    "cost": 4.9,
+   "emoji": "\ud83e\udd83",
    "id": "turkey-greenbean-rice",
    "ingredients": [
     {
@@ -847,6 +872,7 @@
   {
    "calories": 680,
    "cost": 2.3,
+   "emoji": "\ud83c\udf5d",
    "id": "veggie-pasta",
    "ingredients": [
     {
@@ -877,6 +903,7 @@
   {
    "calories": 640,
    "cost": 5.17,
+   "emoji": "\ud83e\udd69",
    "id": "beef-potato-peas",
    "ingredients": [
     {
@@ -908,6 +935,7 @@
   {
    "calories": 640,
    "cost": 2.15,
+   "emoji": "\ud83c\udf72",
    "id": "black-bean-soup",
    "ingredients": [
     {
@@ -945,6 +973,7 @@
   {
    "calories": 730,
    "cost": 2.56,
+   "emoji": "\ud83c\udf3d",
    "id": "blackbean-corn-bowl",
    "ingredients": [
     {
@@ -982,6 +1011,7 @@
   {
    "calories": 730,
    "cost": 3.19,
+   "emoji": "\ud83e\udd58",
    "id": "chickpea-spinach-stew",
    "ingredients": [
     {
@@ -1019,6 +1049,7 @@
   {
    "calories": 720,
    "cost": 4.8,
+   "emoji": "\ud83e\udd52",
    "id": "courgette-mozzarella-bake",
    "ingredients": [
     {
@@ -1056,6 +1087,7 @@
   {
    "calories": 780,
    "cost": 6.8,
+   "emoji": "\ud83d\udc1f",
    "id": "salmon-greens",
    "ingredients": [
     {
@@ -1087,6 +1119,7 @@
   {
    "calories": 690,
    "cost": 9.39,
+   "emoji": "\ud83d\udc20",
    "id": "salmon-sweetcorn",
    "ingredients": [
     {
@@ -1124,6 +1157,7 @@
   {
    "calories": 700,
    "cost": 7.14,
+   "emoji": "\ud83c\udf64",
    "id": "shrimp-garlic-couscous",
    "ingredients": [
     {
@@ -1160,6 +1194,7 @@
   {
    "calories": 700,
    "cost": 3.5,
+   "emoji": "\ud83c\udf60",
    "id": "sweet-potato-bowl",
    "ingredients": [
     {
@@ -1191,6 +1226,7 @@
   {
    "calories": 730,
    "cost": 4.55,
+   "emoji": "\ud83e\udd61",
    "id": "tofu-cauliflower-rice",
    "ingredients": [
     {
@@ -1227,6 +1263,7 @@
   {
    "calories": 690,
    "cost": 3.9,
+   "emoji": "\ud83e\udd62",
    "id": "tofu-stirfry",
    "ingredients": [
     {
@@ -1263,6 +1300,7 @@
   {
    "calories": 530,
    "cost": 4.41,
+   "emoji": "\ud83e\udd54",
    "id": "tuna-potato-salad",
    "ingredients": [
     {
@@ -1300,6 +1338,7 @@
   {
    "calories": 600,
    "cost": 6.09,
+   "emoji": "\ud83e\udd83",
    "id": "turkey-sweet-potato",
    "ingredients": [
     {
@@ -1337,6 +1376,7 @@
   {
    "calories": 620,
    "cost": 3.1,
+   "emoji": "\ud83c\udf73",
    "id": "veg-omelette",
    "ingredients": [
     {

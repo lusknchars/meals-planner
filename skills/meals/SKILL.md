@@ -71,6 +71,23 @@ with a physician.
 4. Report the per-day calories against the target and the total against the
    budget. When `over_budget` is true, say so plainly and offer to replan with
    cheaper recipes rather than hiding it.
+
+   **Bold the dish, and lead it with the emoji the plan gives you.** Each meal
+   carries an `emoji`; use that one rather than choosing your own, so a dish
+   keeps the same face from week to week. The name is what somebody scans for,
+   so it is the thing in bold — not the calories, not the price:
+
+   ```
+   📅 **Mon** 1,830 kcal, $11.91
+   🍏 **Yoghurt with apple and almonds**
+   🍝 **Beef and tomato pasta**
+   🥩 **Beef with potatoes and peas**
+   ```
+
+   A whole week that way is long. Offer the detail rather than sending it: give
+   two or three days in full, then the totals, and ask whether they want the
+   rest. When they want it compact, keep one line a day with the emoji before
+   each dish and the name still in bold.
 5. Name the product when a line came from a store: the brand and what it is, as
    in "Kroger Plain Low Fat Yogurt, $2.99 for 32 oz". `brand` is null for about
    one row in eight, so say the description alone then — never the word "None".
