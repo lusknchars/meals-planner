@@ -10,6 +10,8 @@
 !vendor/**
 !image/
 !image/**
+!plugin/
+!plugin/**
 **/__pycache__
 **/*.pyc
 **/prices.*.json

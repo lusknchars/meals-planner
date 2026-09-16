@@ -112,8 +112,18 @@ new override in the recipe's unit, never a conversion you invent.
 ## Finding their store
 
 Prices are per store, so the first thing worth knowing is where somebody shops.
-Ask for a zip code — that is all the lookup needs, and it is less than asking for
-a street address.
+
+**Ask before you price anything, and never infer it.** A language is a country
+at best, and a country is not a shop. Ask it plainly and let them answer at
+whatever precision they like:
+
+> Where are you right now? Street and neighbourhood, or city and state, or a
+> postcode is enough.
+
+A postcode is all the lookup needs, so a city and state is worth one more
+question rather than a guess. Never name a metro area they did not give you: an
+answer headed "LA area" to somebody who never said Los Angeles is a fabrication
+in the same way an unchecked price is.
 
 ```sh
 python3 /opt/hermes/skills/meals/scripts/compare.py --zip 90012 --limit 3

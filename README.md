@@ -1,5 +1,9 @@
 # Meals Planner
 
+<p align="center">
+  <img src="docs/logo.png" alt="Meals Planner: a calendar with two days ticked, resting in a bowl of greens and half an avocado" width="320">
+</p>
+
 A Hermes agent for Plow. Text it what you need and it plans the week's meals,
 tracks calories against your target, keeps the cost inside your budget, and
 prepares an order from places near you.

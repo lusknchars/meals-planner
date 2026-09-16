@@ -1,0 +1,15 @@
+name: meals-guard
+version: "1.0.0"
+description: >
+  Refuses to send a reply containing a money figure that did not come out of
+  this conversation's own meals scripts, and strips markdown bullets and
+  backslash-escaped punctuation on the way out. The price rule as a gate rather
+  than as instructions: an agent told three times, in its persona and in its
+  skill, never to quote a remembered price did it anyway.
+author: Meals Planner
+kind: standalone
+hooks:
+  - post_tool_call
+  - transform_llm_output
+  - on_session_end
+  - on_session_reset

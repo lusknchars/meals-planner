@@ -1,0 +1,1 @@
+/command/with-contenv /opt/hermes/.venv/bin/python /opt/plow/meals-guard-enable.py
