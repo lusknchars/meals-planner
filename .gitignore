@@ -3,3 +3,6 @@
 /.runtime/
 __pycache__/
 *.pyc
+/.env
+/prices.*.json
+skills/meals/prices.*.json

@@ -20,12 +20,15 @@ EARTH_KM = 6371.0
 # remaining calories is worse than both. These weights are the whole ranking.
 DISTANCE_WEIGHT = 0.5
 OVERSHOOT_PENALTY = 6.0
+# Recipe units on the left, snapshot unit-price units on the right. A pair that is
+# not here (a count, a slice) has no comparable rate, so the estimate stands.
+UNIT_SCALE = {('g', 'kg'): 0.001, ('kg', 'kg'): 1.0, ('ml', 'l'): 0.001, ('l', 'l'): 1.0}
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS profiles (
   scope TEXT PRIMARY KEY, people INTEGER NOT NULL, calories INTEGER NOT NULL,
   budget REAL, diet TEXT NOT NULL, lat REAL, lon REAL, address TEXT,
-  currency TEXT NOT NULL);
+  currency TEXT NOT NULL, store_location_id TEXT);
 CREATE TABLE IF NOT EXISTS plans (
   scope TEXT NOT NULL, start TEXT NOT NULL, days INTEGER NOT NULL,
   payload TEXT NOT NULL, PRIMARY KEY (scope, start));
@@ -97,14 +100,84 @@ def suits(tags, diet):
     return all(restriction in tags for restriction in diet)
 
 
+def haversine_km(lat1, lon1, lat2, lon2):
+    lat1, lon1, lat2, lon2 = map(math.radians, (lat1, lon1, lat2, lon2))
+    half = (math.sin((lat2 - lat1) / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2)
+    return 2 * EARTH_KM * math.asin(math.sqrt(half))
+
+
 def distance_km(profile, venue):
     if profile['lat'] is None or profile['lon'] is None:
         raise ValueError('set your location first: profile set --lat <n> --lon <n>')
-    lat1, lon1 = math.radians(profile['lat']), math.radians(profile['lon'])
-    lat2, lon2 = math.radians(venue['lat']), math.radians(venue['lon'])
-    half = (math.sin((lat2 - lat1) / 2) ** 2
-            + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2)
-    return round(2 * EARTH_KM * math.asin(math.sqrt(half)), 2)
+    return round(haversine_km(profile['lat'], profile['lon'], venue['lat'], venue['lon']), 2)
+
+
+def catalogue_dir():
+    return Path(os.environ.get('MEALS_CATALOGUE')
+                or Path(__file__).resolve().parents[1] / 'catalogue.json').parent
+
+
+def read_snapshot(path, what):
+    """A snapshot built out of band by refresh.py. Missing is a plain answer, not a crash."""
+    try:
+        return json.loads(Path(path).read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f'no usable {what} snapshot at {path} ({error.__class__.__name__}); '
+                         f'build one with refresh.py')
+
+
+def stores_snapshot():
+    return read_snapshot(os.environ.get('MEALS_STORES') or catalogue_dir() / 'stores.json',
+                         'stores')
+
+
+def prices_snapshot(location_id):
+    """This store's prices, or None. No snapshot simply means catalogue estimates."""
+    if not location_id:
+        return None
+    folder = Path(os.environ.get('MEALS_PRICES_DIR') or catalogue_dir())
+    path = folder / f'prices.{location_id}.json'
+    return read_snapshot(path, 'prices') if path.is_file() else None
+
+
+def priced(quantity, unit, candidates):
+    """Cheapest real price for this quantity: (cost, product, value, package_price).
+
+    A candidate whose size did not parse has no unit price, so it can only offer
+    its package price — the caller then keeps the catalogue estimate and says so,
+    rather than inventing a per-gram figure.
+    """
+    usable = []
+    for candidate in candidates or []:
+        scale = UNIT_SCALE.get((unit, candidate.get('unit')))
+        if not candidate.get('unit_price') or scale is None:
+            continue
+        rate = candidate['unit_price']
+        if candidate.get('promo') and candidate.get('price'):
+            rate = rate * candidate['promo'] / candidate['price']
+        usable.append((rate, scale, candidate))
+    package = next((row.get('price') for row in candidates or [] if row.get('price')), None)
+    if not usable:
+        return None, None, None, package
+    usable.sort(key=lambda found: found[0])
+    rate, scale, chosen = usable[0]
+    value = 'only priced option' if len(usable) == 1 else 'best value'
+    return round(rate * quantity * scale, 2), chosen, value, chosen.get('price')
+
+
+def stores(db, scope, args):
+    profile = read_profile(db, scope)
+    if profile['lat'] is None or profile['lon'] is None:
+        raise ValueError('set your location first: profile set --lat <n> --lon <n>')
+    data = stores_snapshot()
+    found = [dict(store, distance_km=round(haversine_km(
+        profile['lat'], profile['lon'], store['lat'], store['lon']), 2))
+        for store in data.get('stores', []) if store.get('lat') is not None]
+    found.sort(key=lambda store: store['distance_km'])
+    limit = int(positive(args.limit, 'limit')) if args.limit else 10
+    return {'stores': found[:limit], 'source': data.get('source'),
+            'licence': data.get('licence'), 'captured': data.get('captured')}
 
 
 def read_profile(db, scope):
@@ -122,7 +195,8 @@ def set_profile(db, scope, args):
     current = db.execute('SELECT * FROM profiles WHERE scope=?', (scope,)).fetchone()
     saved = dict(current) if current else {
         'scope': scope, 'people': 1, 'calories': 2000, 'budget': None,
-        'diet': '[]', 'lat': None, 'lon': None, 'address': None, 'currency': None}
+        'diet': '[]', 'lat': None, 'lon': None, 'address': None, 'currency': None,
+        'store_location_id': None}
     if args.people is not None:
         saved['people'] = int(positive(args.people, 'people'))
     if args.calories is not None:
@@ -138,16 +212,20 @@ def set_profile(db, scope, args):
         saved['lon'] = float(args.lon)
     if args.address is not None:
         saved['address'] = text(args.address, 'address', 300)
+    if args.store is not None:
+        saved['store_location_id'] = text(args.store, 'store', 40)
     saved['currency'] = text(args.currency, 'currency', 8, optional=True) or \
         saved['currency'] or catalogue()['currency']
     db.execute('''INSERT INTO profiles (scope, people, calories, budget, diet, lat, lon,
-                  address, currency) VALUES (?,?,?,?,?,?,?,?,?)
+                  address, currency, store_location_id) VALUES (?,?,?,?,?,?,?,?,?,?)
                   ON CONFLICT(scope) DO UPDATE SET people=excluded.people,
                   calories=excluded.calories, budget=excluded.budget, diet=excluded.diet,
                   lat=excluded.lat, lon=excluded.lon, address=excluded.address,
-                  currency=excluded.currency''',
+                  currency=excluded.currency,
+                  store_location_id=excluded.store_location_id''',
                (scope, saved['people'], saved['calories'], saved['budget'], saved['diet'],
-                saved['lat'], saved['lon'], saved['address'], saved['currency']))
+                saved['lat'], saved['lon'], saved['address'], saved['currency'],
+                saved['store_location_id']))
     db.commit()
     return {'profile': read_profile(db, scope)}
 
@@ -224,11 +302,28 @@ def shopping(db, scope, args):
                 held['quantity'] += part['quantity'] * profile['people']
                 held['cost'] += part['cost'] * profile['people']
     items = sorted(basket.values(), key=lambda held: held['item'])
+    prices = prices_snapshot(profile['store_location_id'])
+    stamp = (prices or {}).get('captured', '')[:10]
+    from_snapshot = 0
     for held in items:
         held['quantity'] = round(held['quantity'], 2)
-        held['cost'] = round(held['cost'], 2)
+        estimate = round(held['cost'], 2)
+        cost, product, value, package = priced(
+            held['quantity'], held['unit'], (prices or {}).get('items', {}).get(held['item']))
+        if cost is None:
+            held.update(cost=estimate, estimate=estimate, product=None, value=None,
+                        price_source='catalogue estimate', package_price=package,
+                        promo=None, image=None)
+            continue
+        held.update(cost=cost, estimate=estimate, product=product['description'], value=value,
+                    price_source=f"kroger:{prices['location_id']} {stamp}",
+                    package_price=product.get('price'), promo=product.get('promo'),
+                    image=product.get('image'))
+        from_snapshot += 1
     return {'items': items, 'total_cost': round(sum(held['cost'] for held in items), 2),
-            'currency': profile['currency'], 'start': saved['start'], 'people': profile['people']}
+            'currency': profile['currency'], 'start': saved['start'], 'people': profile['people'],
+            'priced_from_snapshot': from_snapshot, 'estimated': len(items) - from_snapshot,
+            'prices_captured': stamp or None}
 
 
 def consumed_on(db, scope, date):
@@ -352,6 +447,7 @@ def parser():
     setter.add_argument('--lon', type=float)
     setter.add_argument('--address')
     setter.add_argument('--currency')
+    setter.add_argument('--store', help='Kroger locationId whose price snapshot to use')
     actions.add_parser('show')
 
     week = sub.add_parser('plan', help='plan meals for a run of days')
@@ -361,6 +457,9 @@ def parser():
 
     basket = sub.add_parser('shopping', help='one list for a saved plan')
     basket.add_argument('--start')
+
+    shops = sub.add_parser('stores', help='supermarkets near you, from the snapshot')
+    shops.add_argument('--limit', type=int)
 
     delivery = sub.add_parser('order', help='draft an order, confirm one, or list them')
     delivery.add_argument('action', nargs='?', choices=['confirm', 'list'])
@@ -383,7 +482,8 @@ def parser():
 def main(argv=None):
     os.umask(0o077)
     args = parser().parse_args(argv)
-    handlers = {'plan': plan, 'shopping': shopping, 'order': order, 'log': log, 'today': today}
+    handlers = {'plan': plan, 'shopping': shopping, 'order': order, 'log': log, 'today': today,
+                'stores': stores}
     try:
         scope = text(args.scope, 'scope', 200)
         db = connect()

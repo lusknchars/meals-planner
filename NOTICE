@@ -1,5 +1,15 @@
 Meals Planner content is MIT licensed, copyright 2026 Lucas Oliveira.
 
+skills/meals/stores.json contains data from OpenStreetMap, retrieved through the
+Overpass API. That data is © OpenStreetMap contributors, available under the Open
+Database Licence (ODbL) 1.0: https://www.openstreetmap.org/copyright. It is not
+relicensed by this project's MIT notice, and redistributing a modified store
+database carries ODbL's share-alike obligation.
+
+Store prices come from the Kroger Products API under Kroger's developer terms and
+are NOT part of this repository or its image: price snapshots are written to
+ignored files on the installation that fetched them.
+
 This image derives from plow-pbc/plow-hermes-agent at
 8088c7f77f5ffd536a80c9dc302ebdb39e6be1d2. Its upstream runtime and bundled
 dependencies retain their own licenses.

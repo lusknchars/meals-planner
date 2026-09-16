@@ -38,12 +38,42 @@ The container reports token usage to the Agent Index every five minutes. An agen
 whose owner does not want that is one built without the `image/s6-overlay`
 service.
 
+## Real stores and real prices
+
+`refresh.py` builds the snapshots the skill reads. It runs out of band — at build
+time or on demand — never inside a chat turn, so replies stay fast, offline and
+deterministic.
+
+```sh
+# Supermarkets within 5 km of a point, from OpenStreetMap
+python3 refresh.py stores --lat 34.0522 --lon -118.2437 --radius-km 5
+
+# This store's prices for every catalogue ingredient, from Kroger
+python3 refresh.py prices --zip 90017
+```
+
+Stores land in `skills/meals/stores.json` and ship with the agent: names,
+brands, street addresses, opening hours and coordinates. Ask the agent for
+`stores` and it lists the nearest ones with distances.
+
+Prices need a free app at developer.kroger.com, then `KROGER_CLIENT_ID` and
+`KROGER_CLIENT_SECRET` in `.env`. They land in `skills/meals/prices.<locationId>.json`,
+which Git ignores — Kroger's developer terms cover calling their API for your own
+planning, not republishing their prices. Tell the agent which store to use with
+`profile set --store <locationId>`.
+
+Each shopping-list line then says where its figure came from:
+`kroger:70100123 2026-09-16` for a real price, or `catalogue estimate` when the
+package size can't be converted to the recipe's unit — a 32 oz bag has a per-kilo
+price, "family pack" does not, and the agent admits the difference instead of
+inventing one.
+
 ## Venues are sample data
 
 The shipped catalogue's restaurants are samples placed around one city so the
 ranking can be demonstrated offline. They are not a real directory, and the agent
 says so whenever it uses them. Point `MEALS_CATALOGUE` at your own JSON file to
-plan against real recipes, prices and places.
+plan against your own recipes.
 
 ## Layout
 
@@ -63,16 +93,32 @@ python3 -m unittest discover -s tests -v
 
 ## Publish
 
-Registering updates this agent's page on the Agent Index. Run it against the
-installation's real Hermes home, with the demonstration video and screenshots the
-listing shows:
+The running container registers itself and reports usage every five minutes. That
+first registration carries only the agent id, so the page starts bare; this fills
+it in, including the demonstration video and screenshots.
+
+The Hermes home lives inside the container's volume, so registration runs there,
+not on the host. `with-contenv` is an execline script that a plain `exec` cannot
+run, so read the token from the container environment directly:
 
 ```sh
-python3 index.py register --hermes-home /var/lib/hermes \
-  --credentials ./plow-credentials \
-  --video https://example.com/your-demo \
-  --image https://example.com/your-screenshot.png
+docker compose exec -T agent /bin/sh -c '
+TOKEN=$(cat /run/s6/container_environment/PLOW_AGENT_TOKEN)
+exec /command/s6-setuidgid hermes env HOME=/var/lib/hermes HERMES_HOME=/var/lib/hermes \
+  AGENT_ID=meals-planner PLOW_AGENT_TOKEN="$TOKEN" \
+  /opt/hermes/.venv/bin/python3 /opt/plow/agent-index-client.py \
+  --register --agent meals-planner --name "Meals Planner" \
+  --blurb "..." --repo https://github.com/lusknchars/meals-planner --runtime Hermes \
+  --install-url https://github.com/lusknchars/meals-planner/blob/main/README.md \
+  --video https://example.com/your-demo --image https://example.com/your-screenshot.png
+'
 ```
 
-`status` says whether this installation is registered, and `dry-run` shows what
-would be reported without sending it.
+An `--install-url` with a `#fragment` is rejected: the client reports
+`some values were not stored: {'install_url': 1}` and keeps the rest.
+
+Swap `--register …` for `--dry-run` to see the usage that would be reported, or
+`status` to check whether this installation is registered.
+
+`index.py` wraps the same pinned client for a Hermes home on the host, which is
+the path to use when you run Hermes outside Docker.
