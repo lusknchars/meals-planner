@@ -21,11 +21,23 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import foods  # noqa: E402
+
 KROGER_BASE = 'https://api.kroger.com/v1'
 USER_AGENT = 'meals-planner/1.0 (store comparison)'
 # Staples people actually buy weekly. Small on purpose: every extra item costs a
 # call per store, and the point is an answer while somebody is still reading.
-BASKET = ('milk', 'eggs', 'bread', 'rice', 'bananas', 'chicken breast', 'black beans', 'oats')
+BASKET = (
+    {'term': 'milk', 'quantity': 1, 'unit': 'l'},
+    {'term': 'eggs', 'quantity': 12, 'unit': 'ct'},
+    {'term': 'bread', 'quantity': 1, 'unit': 'kg'},
+    {'term': 'rice', 'quantity': 1, 'unit': 'kg'},
+    {'term': 'bananas', 'quantity': 1, 'unit': 'kg'},
+    {'term': 'chicken breast', 'quantity': 1, 'unit': 'kg'},
+    {'term': 'black beans', 'quantity': 1, 'unit': 'kg'},
+    {'term': 'oats', 'quantity': 1, 'unit': 'kg'},
+)
 EARTH_KM = 6371.0
 
 
@@ -97,31 +109,27 @@ def nearby_stores(fetch, bearer, zip_code, limit=3):
     return found
 
 
-def cheapest(fetch, bearer, location_id, term):
-    """The lowest shelf price for one staple at one store, or None."""
-    url = (f'{KROGER_BASE}/products?filter.term={urllib.parse.quote(term)}'
-           f'&filter.locationId={urllib.parse.quote(str(location_id))}&filter.limit=5')
+def cheapest(fetch, bearer, location_id, staple):
+    """The cheapest product that really is this staple, costed for its quantity.
+
+    Ten candidates rather than five: the right product is often not first, and
+    the wrong ones are now discarded rather than ranked.
+    """
+    url = (f'{KROGER_BASE}/products?filter.term={urllib.parse.quote(staple["term"])}'
+           f'&filter.locationId={urllib.parse.quote(str(location_id))}&filter.limit=10')
     status, raw = fetch('GET', url, headers={'Authorization': f'Bearer {bearer}'}, timeout=30)
-    prices = []
-    for product in _json(status, raw, 'Kroger products').get('data', []):
-        item = (product.get('items') or [{}])[0]
-        price = (item.get('price') or {})
-        regular, promo = price.get('regular'), price.get('promo')
-        paid = promo if promo else regular
-        if paid:
-            prices.append({'item': term, 'price': paid,
-                           'description': product.get('description'),
-                           'product_id': product.get('productId'), 'size': item.get('size')})
-    if not prices:
-        return None
-    return min(prices, key=lambda row: row['price'])
+    return foods.best_for(staple, _json(status, raw, 'Kroger products').get('data', []))
 
 
 def basket_total(priced):
-    """What the basket costs here, or None when nothing could be priced."""
+    """What the standard basket costs here, or None when nothing could be priced.
+
+    Sums the cost of each staple's standard quantity -- a litre of milk, a dozen
+    eggs -- never the sticker price of whatever packet happened to be cheapest.
+    """
     if not priced:
         return None
-    return round(sum(row['price'] for row in priced), 2)
+    return round(sum(row['cost'] for row in priced), 2)
 
 
 def compare_stores(fetch, client_id, client_secret, zip_code, limit=3, lat=None, lon=None,
@@ -131,7 +139,7 @@ def compare_stores(fetch, client_id, client_secret, zip_code, limit=3, lat=None,
     stores = nearby_stores(fetch, bearer, zip_code, limit)
     for store in stores:
         priced = [row for row in
-                  (cheapest(fetch, bearer, store['location_id'], term) for term in basket)
+                  (cheapest(fetch, bearer, store['location_id'], staple) for staple in basket)
                   if row]
         store['items'] = priced
         store['priced'] = len(priced)

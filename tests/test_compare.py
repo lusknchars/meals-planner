@@ -35,12 +35,26 @@ LOCATIONS_REPLY = {'data': [
 ]}
 
 
-def products(price, description='Kroger Whole Milk', unit_price=None):
-    return {'data': [{'productId': '0001111041600', 'description': description,
+def products(price, description=None, size=None, staple=None):
+    """A search result that satisfies whichever staple is being priced.
+
+    The old fixture answered every staple with a gallon of milk, which the
+    normalising comparison correctly refuses: a gallon cannot price a dozen eggs.
+    """
+    staple = staple or {'term': 'milk', 'quantity': 1, 'unit': 'l'}
+    if size is None:
+        size = {'l': '1 gal', 'kg': '2 lb', 'ct': '12 ct'}[staple['unit']]
+    return {'data': [{'productId': '0001111041600',
+                      'description': description or f"Kroger {staple['term']}",
                       'brand': 'Kroger',
-                      'items': [{'size': '1 gal', 'soldBy': 'Unit',
+                      'items': [{'size': size, 'soldBy': 'Unit',
                                  'price': {'regular': price, 'promo': 0}}],
                       'images': []}]}
+
+
+def basket_replies(price):
+    """One search reply per staple, each shaped for that staple's unit."""
+    return [(200, products(price, staple=staple)) for staple in compare.BASKET]
 
 
 class Recorder:
@@ -60,11 +74,13 @@ class Basket(unittest.TestCase):
     def test_the_basket_is_small_enough_to_answer_in_a_reply(self):
         self.assertLessEqual(len(compare.BASKET), 8)
         self.assertGreaterEqual(len(compare.BASKET), 5)
-        self.assertIn('eggs', compare.BASKET)
+        self.assertIn('eggs', [staple['term'] for staple in compare.BASKET])
 
-    def test_a_store_total_sums_what_it_could_price(self):
-        priced = [{'item': 'milk', 'price': 3.99}, {'item': 'eggs', 'price': 4.39}]
-        self.assertAlmostEqual(compare.basket_total(priced), 8.38, places=2)
+    def test_a_store_total_sums_the_standard_quantities(self):
+        # Normalised rows carry the cost of the staple's standard quantity, not
+        # the sticker price of whichever packet was cheapest.
+        priced = [{'term': 'milk', 'cost': 1.0}, {'term': 'eggs', 'cost': 2.93}]
+        self.assertAlmostEqual(compare.basket_total(priced), 3.93, places=2)
 
     def test_a_store_that_priced_nothing_has_no_total(self):
         self.assertIsNone(compare.basket_total([]))
@@ -72,11 +88,11 @@ class Basket(unittest.TestCase):
 
 class Comparing(unittest.TestCase):
     def replies(self, first_price, second_price):
-        # token, locations, then BASKET searches for each of two stores
-        calls = [(200, TOKEN_REPLY), (200, LOCATIONS_REPLY)]
-        calls += [(200, products(first_price))] * len(compare.BASKET)
-        calls += [(200, products(second_price))] * len(compare.BASKET)
-        return calls
+        # token, locations, then one search per staple for each of two stores.
+        # Each reply is shaped for its own staple: answering every one with a
+        # gallon of milk is what the normalising comparison exists to refuse.
+        return ([(200, TOKEN_REPLY), (200, LOCATIONS_REPLY)]
+                + basket_replies(first_price) + basket_replies(second_price))
 
     def test_stores_are_ranked_by_what_the_basket_costs(self):
         fetch = Recorder(self.replies(4.00, 3.00))
