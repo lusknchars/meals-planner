@@ -25,11 +25,27 @@ OVERSHOOT_PENALTY = 6.0
 UNIT_SCALE = {('g', 'kg'): 0.001, ('kg', 'kg'): 1.0, ('ml', 'l'): 0.001, ('l', 'l'): 1.0,
               ('un', 'ct'): 1.0, ('sl', 'ct'): 1.0}
 
+# Daily targets. Mifflin-St Jeor, a standard activity multiplier, a goal shift,
+# then macro grams. Deterministic on purpose: a model is good at sounding certain
+# about numbers, which is the wrong skill for the arithmetic a diet rests on.
+ACTIVITY = {'sedentary': 1.2, 'light': 1.375, 'lightly active': 1.375,
+            'moderate': 1.55, 'moderately active': 1.55, 'active': 1.55,
+            'very': 1.725, 'very active': 1.725, 'extra active': 1.9, 'athlete': 1.9}
+GOAL_SHIFT = {'fat loss': -0.20, 'maintenance': 0.0, 'maintain': 0.0,
+              'muscle gain': 0.10, 'performance': 0.15}
+PROTEIN_PER_LB = {'fat loss': 1.0, 'maintenance': 0.8, 'maintain': 0.8,
+                  'muscle gain': 1.0, 'performance': 0.9}
+FAT_SHARE = 0.25
+# Enforced here rather than asked for in a prompt. Below these, a plan needs a
+# clinician, not an agent.
+CALORIE_FLOOR = {'female': 1200, 'male': 1500}
+
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS profiles (
   scope TEXT PRIMARY KEY, people INTEGER NOT NULL, calories INTEGER NOT NULL,
   budget REAL, diet TEXT NOT NULL, lat REAL, lon REAL, address TEXT,
-  currency TEXT NOT NULL, store_location_id TEXT);
+  currency TEXT NOT NULL, store_location_id TEXT, age INTEGER, sex TEXT,
+  height_in REAL, weight_lb REAL, activity TEXT, goal TEXT);
 CREATE TABLE IF NOT EXISTS plans (
   scope TEXT NOT NULL, start TEXT NOT NULL, days INTEGER NOT NULL,
   payload TEXT NOT NULL, PRIMARY KEY (scope, start));
@@ -200,6 +216,82 @@ def priced(quantity, unit, candidates):
             round(rate, 2), median)
 
 
+def sex_of(value):
+    lowered = text(value, 'sex', 20).strip().lower()
+    if lowered in ('male', 'm', 'man'):
+        return 'male'
+    if lowered in ('female', 'f', 'woman'):
+        return 'female'
+    raise ValueError("sex must be male or female — the formula has no other coefficients")
+
+
+def bmr(sex, weight_lb, height_in, age):
+    """Resting energy, Mifflin-St Jeor."""
+    kilos = positive(weight_lb, 'weight') * 0.45359237
+    centimetres = positive(height_in, 'height') * 2.54
+    base = 10 * kilos + 6.25 * centimetres - 5 * positive(age, 'age')
+    return base + 5 if sex_of(sex) == 'male' else base - 161
+
+
+def tdee(resting, activity):
+    level = text(activity, 'activity', 40).strip().lower()
+    if level not in ACTIVITY:
+        raise ValueError('activity must be one of: ' + ', '.join(sorted(set(ACTIVITY))))
+    return resting * ACTIVITY[level]
+
+
+def target_calories(daily, goal, sex):
+    """Target intake, and whether it had to be held at the floor."""
+    aim = text(goal, 'goal', 40).strip().lower()
+    if aim not in GOAL_SHIFT:
+        raise ValueError('goal must be one of: ' + ', '.join(sorted(set(GOAL_SHIFT))))
+    wanted = daily * (1 + GOAL_SHIFT[aim])
+    floor = CALORIE_FLOOR[sex_of(sex)]
+    if wanted < floor:
+        return floor, True
+    return int(round(wanted)), False
+
+
+def macros(target, weight_lb, goal):
+    """Grams of protein, carbohydrate and fat, plus fibre and water."""
+    aim = text(goal, 'goal', 40).strip().lower()
+    if aim not in PROTEIN_PER_LB:
+        raise ValueError('goal must be one of: ' + ', '.join(sorted(set(PROTEIN_PER_LB))))
+    protein_g = int(round(PROTEIN_PER_LB[aim] * positive(weight_lb, 'weight')))
+    fat_g = int(round(FAT_SHARE * positive(target, 'target') / 9))
+    remaining = target - protein_g * 4 - fat_g * 9
+    if remaining <= 0:
+        raise ValueError(f'{target} kcal cannot hold {protein_g} g protein and {fat_g} g fat; '
+                         'raise the target or lower the protein goal')
+    return {'protein_g': protein_g, 'fat_g': fat_g, 'carb_g': int(round(remaining / 4)),
+            'fiber_g': max(25, int(round(14 * target / 1000))),
+            'water_oz': int(round(weight_lb * 0.5))}
+
+
+def targets(db, scope, args):
+    """The day's numbers, computed from the profile's stats."""
+    profile = read_profile(db, scope)
+    missing = [name for name, key in (('age', 'age'), ('sex', 'sex'), ('height', 'height_in'),
+                                      ('weight', 'weight_lb'), ('activity', 'activity'),
+                                      ('goal', 'goal')) if profile.get(key) in (None, '')]
+    if missing:
+        raise ValueError('targets need ' + ', '.join(missing)
+                         + ': profile set --age 30 --sex male --height-in 70 '
+                           '--weight-lb 175 --activity moderate --goal maintenance')
+    resting = bmr(profile['sex'], profile['weight_lb'], profile['height_in'], profile['age'])
+    daily = tdee(resting, profile['activity'])
+    target, floored = target_calories(daily, profile['goal'], profile['sex'])
+    split = macros(target, profile['weight_lb'], profile['goal'])
+    note = ('These are planning figures, not medical advice; a pre-existing condition, '
+            'pregnancy or a history of disordered eating deserves a clinician.')
+    if floored:
+        note = (f"Held at the {CALORIE_FLOOR[sex_of(profile['sex'])]:,} kcal floor: the goal "
+                'implied less, and going under that needs medical supervision. ') + note
+    return {'bmr': int(round(resting)), 'tdee': int(round(daily)), 'calories': target,
+            'floored': floored, 'goal': profile['goal'], 'activity': profile['activity'],
+            'note': note, **split}
+
+
 def override_days():
     """How long a confirmed price stays usable. A price that never expires is a
     hardcoded constant with better manners."""
@@ -268,7 +360,8 @@ def set_profile(db, scope, args):
     saved = dict(current) if current else {
         'scope': scope, 'people': 1, 'calories': 2000, 'budget': None,
         'diet': '[]', 'lat': None, 'lon': None, 'address': None, 'currency': None,
-        'store_location_id': None}
+        'store_location_id': None, 'age': None, 'sex': None, 'height_in': None,
+        'weight_lb': None, 'activity': None, 'goal': None}
     if args.people is not None:
         saved['people'] = int(positive(args.people, 'people'))
     if args.calories is not None:
@@ -286,18 +379,43 @@ def set_profile(db, scope, args):
         saved['address'] = text(args.address, 'address', 300)
     if args.store is not None:
         saved['store_location_id'] = text(args.store, 'store', 40)
+    # Stats for the daily targets. Checked here so a wrong activity or goal is
+    # refused while the person is still telling you about themselves.
+    if args.age is not None:
+        saved['age'] = int(positive(args.age, 'age'))
+    if args.sex is not None:
+        saved['sex'] = sex_of(args.sex)
+    if args.height_in is not None:
+        saved['height_in'] = float(positive(args.height_in, 'height'))
+    if args.weight_lb is not None:
+        saved['weight_lb'] = float(positive(args.weight_lb, 'weight'))
+    if args.activity is not None:
+        level = text(args.activity, 'activity', 40).strip().lower()
+        if level not in ACTIVITY:
+            raise ValueError('activity must be one of: ' + ', '.join(sorted(set(ACTIVITY))))
+        saved['activity'] = level
+    if args.goal is not None:
+        aim = text(args.goal, 'goal', 40).strip().lower()
+        if aim not in GOAL_SHIFT:
+            raise ValueError('goal must be one of: ' + ', '.join(sorted(set(GOAL_SHIFT))))
+        saved['goal'] = aim
     saved['currency'] = text(args.currency, 'currency', 8, optional=True) or \
         saved['currency'] or catalogue()['currency']
     db.execute('''INSERT INTO profiles (scope, people, calories, budget, diet, lat, lon,
-                  address, currency, store_location_id) VALUES (?,?,?,?,?,?,?,?,?,?)
+                  address, currency, store_location_id, age, sex, height_in, weight_lb,
+                  activity, goal) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                   ON CONFLICT(scope) DO UPDATE SET people=excluded.people,
                   calories=excluded.calories, budget=excluded.budget, diet=excluded.diet,
                   lat=excluded.lat, lon=excluded.lon, address=excluded.address,
                   currency=excluded.currency,
-                  store_location_id=excluded.store_location_id''',
+                  store_location_id=excluded.store_location_id, age=excluded.age,
+                  sex=excluded.sex, height_in=excluded.height_in,
+                  weight_lb=excluded.weight_lb, activity=excluded.activity,
+                  goal=excluded.goal''',
                (scope, saved['people'], saved['calories'], saved['budget'], saved['diet'],
                 saved['lat'], saved['lon'], saved['address'], saved['currency'],
-                saved['store_location_id']))
+                saved['store_location_id'], saved['age'], saved['sex'], saved['height_in'],
+                saved['weight_lb'], saved['activity'], saved['goal']))
     db.commit()
     return {'profile': read_profile(db, scope)}
 
@@ -545,6 +663,12 @@ def parser():
     setter.add_argument('--address')
     setter.add_argument('--currency')
     setter.add_argument('--store', help='Kroger locationId whose price snapshot to use')
+    setter.add_argument('--age', type=int)
+    setter.add_argument('--sex', help='male or female; the formula has no other coefficients')
+    setter.add_argument('--height-in', dest='height_in', type=float, help='total inches')
+    setter.add_argument('--weight-lb', dest='weight_lb', type=float)
+    setter.add_argument('--activity', help='sedentary, light, moderate, very active, athlete')
+    setter.add_argument('--goal', help='fat loss, maintenance, muscle gain, performance')
     actions.add_parser('show')
 
     week = sub.add_parser('plan', help='plan meals for a run of days')
@@ -581,6 +705,8 @@ def parser():
 
     day = sub.add_parser('today', help='target, eaten and remaining')
     day.add_argument('--date')
+
+    sub.add_parser('targets', help="the day's calories and macros, from the profile's stats")
     return parsed
 
 
@@ -588,7 +714,7 @@ def main(argv=None):
     os.umask(0o077)
     args = parser().parse_args(argv)
     handlers = {'plan': plan, 'shopping': shopping, 'order': order, 'log': log, 'today': today,
-                'stores': stores, 'override': override_command}
+                'stores': stores, 'override': override_command, 'targets': targets}
     try:
         scope = text(args.scope, 'scope', 200)
         db = connect()

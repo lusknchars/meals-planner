@@ -36,6 +36,13 @@ OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
 OVERPASS_MIRRORS = (OVERPASS_URL, 'https://overpass.kumi.systems/api/interpreter',
                     'https://overpass.osm.ch/api/interpreter')
 KROGER_BASE = 'https://api.kroger.com/v1'
+USDA_BASE = 'https://api.nal.usda.gov/fdc/v1'
+# Nutrient name -> (unit that identifies it, key in the snapshot). The unit is
+# part of the match because Energy is published in both kcal and kJ.
+USDA_NUTRIENTS = {'Energy': ('kcal', 'kcal'), 'Protein': ('g', 'protein_g'),
+                  'Carbohydrate, by difference': ('g', 'carb_g'),
+                  'Total lipid (fat)': ('g', 'fat_g'),
+                  'Fiber, total dietary': ('g', 'fiber_g')}
 USER_AGENT = 'meals-planner/1.0 (Hermes agent snapshot builder)'
 SHOP_FILTER = '["shop"~"^(supermarket|greengrocer)$"]'
 # California's bounding box, as a sanity check on coordinates given on the CLI.
@@ -319,6 +326,86 @@ def fetch_prices(fetch, client_id, client_secret, location_id, terms):
     return {'location_id': location_id, 'items': items}
 
 
+def usda_key():
+    """A free key from fdc.nal.usda.gov; DEMO_KEY is rate-limited and for
+    development only."""
+    return os.environ.get('USDA_API_KEY') or 'DEMO_KEY'
+
+
+def usda_search(fetch, api_key, term):
+    """The best reference match for an ingredient, or None. Foundation and SR
+    Legacy carry portion weights; branded rows usually do not."""
+    url = (f'{USDA_BASE}/foods/search?api_key={urllib.parse.quote(str(api_key))}&pageSize=1'
+           f'&dataType={urllib.parse.quote("Foundation,SR Legacy")}'
+           f'&query={urllib.parse.quote(str(term))}')
+    status, raw = fetch('GET', url, headers={'User-Agent': USER_AGENT}, timeout=60)
+    foods = _json(status, raw, 'USDA search').get('foods') or []
+    if not foods:
+        return None
+    return {'fdc_id': foods[0].get('fdcId'), 'description': foods[0].get('description')}
+
+
+def usda_food(fetch, api_key, fdc_id):
+    url = f'{USDA_BASE}/food/{int(fdc_id)}?api_key={urllib.parse.quote(str(api_key))}'
+    status, raw = fetch('GET', url, headers={'User-Agent': USER_AGENT}, timeout=60)
+    return _json(status, raw, 'USDA food')
+
+
+def nutrition_record(detail):
+    """Macros per 100 g, plus published portion weights.
+
+    A nutrient the source does not carry stays None: unknown fibre is not zero
+    fibre. Energy is published twice, in kcal and kJ, so the unit decides which
+    row is the calorie figure -- matching on the name alone reads a banana as
+    371 calories.
+    """
+    per_100g = {key: None for key in ('kcal', 'protein_g', 'carb_g', 'fat_g', 'fiber_g')}
+    for row in detail.get('foodNutrients') or []:
+        nutrient = row.get('nutrient') or {}
+        wanted = USDA_NUTRIENTS.get(nutrient.get('name'))
+        if not wanted:
+            continue
+        unit, key = wanted
+        if (nutrient.get('unitName') or '').lower() != unit.lower():
+            continue
+        if per_100g[key] is None:
+            per_100g[key] = row.get('amount')
+    portions = [{'label': portion.get('modifier') or portion.get('portionDescription'),
+                 'grams': portion.get('gramWeight')}
+                for portion in (detail.get('foodPortions') or []) if portion.get('gramWeight')]
+    serving = next((portion['grams'] for portion in portions
+                    if (portion['label'] or '').strip().lower() == 'nlea serving'),
+                   portions[0]['grams'] if portions else None)
+    return {'fdc_id': detail.get('fdcId'), 'description': detail.get('description'),
+            'per_100g': per_100g, 'portions': portions, 'serving_g': serving}
+
+
+def fetch_nutrition(fetch, api_key, terms):
+    """One search and one detail call per ingredient, keyed by the catalogue name.
+
+    A refusal part-way through stops the run and keeps what was already fetched:
+    DEMO_KEY allows about thirty calls an hour and a full catalogue needs more,
+    so throwing away thirty good lookups to report one failure helps nobody. The
+    ingredients never reached are named in ``pending``.
+    """
+    items, unmatched, pending, stopped = {}, [], [], None
+    remaining = list(terms)
+    while remaining:
+        term = remaining.pop(0)
+        try:
+            found = usda_search(fetch, api_key, search_term(term))
+            if not found:
+                items[term] = None
+                unmatched.append(term)
+                continue
+            items[term] = nutrition_record(usda_food(fetch, api_key, found['fdc_id']))
+        except ValueError as refusal:
+            stopped = f'{term}: {refusal}'
+            pending = [term] + remaining
+            break
+    return {'items': items, 'unmatched': unmatched, 'pending': pending, 'stopped': stopped}
+
+
 def parse_size(value):
     """('32 oz') -> (32.0, 'oz'). Anything this cannot read returns None, so a
     caller shows the package price instead of inventing a per-gram figure."""
@@ -414,6 +501,12 @@ def main(argv=None):
     stores.add_argument('--radius-km', type=float, default=5)
     stores.add_argument('--out', default=str(root / 'skills/meals/stores.json'))
 
+    nutrients = sub.add_parser('nutrition', help='snapshot macros for every catalogue ingredient')
+    nutrients.add_argument('--catalogue', default=str(root / 'skills/meals/catalogue.json'))
+    nutrients.add_argument('--out', default=str(root / 'skills/meals/nutrition.json'))
+    nutrients.add_argument('--api-key', dest='api_key',
+                           help='a free FoodData Central key; DEMO_KEY is development only')
+
     prices = sub.add_parser('prices', help='snapshot one Kroger store\'s prices')
     prices.add_argument('--zip', dest='zip_code', required=True)
     prices.add_argument('--location-id', help='skip the location lookup')
@@ -434,6 +527,26 @@ def main(argv=None):
                                   'lon': args.lon, 'radius_km': args.radius_km}},
                                   source='OpenStreetMap via Overpass', licence='ODbL 1.0')
             print(f'{len(near)} stores -> {path}')
+            return 0
+
+        if args.command == 'nutrition':
+            terms = catalogue_terms(args.catalogue)
+            snapshot = fetch_nutrition(http, args.api_key or usda_key(), terms)
+            path = write_snapshot(args.out, snapshot, source='USDA FoodData Central',
+                                  licence='public domain (US government work)')
+            matched = sum(1 for row in snapshot['items'].values() if row)
+            print(f'{matched}/{len(terms)} ingredients matched -> {path}')
+            if snapshot['unmatched']:
+                print('no match: ' + ', '.join(snapshot['unmatched']), file=sys.stderr)
+            if snapshot['stopped']:
+                # Say what stopped it and what is missing. There is no resume:
+                # a re-run starts from the top and re-fetches what is already here.
+                print(f"stopped at {snapshot['stopped']}", file=sys.stderr)
+                print(f"{len(snapshot['pending'])} not looked up: "
+                      + ', '.join(snapshot['pending'][:8])
+                      + ('...' if len(snapshot['pending']) > 8 else ''), file=sys.stderr)
+                print('a free key at fdc.nal.usda.gov/api-key-signup.html lifts the '
+                      'DEMO_KEY limit; re-run to fetch the rest', file=sys.stderr)
             return 0
 
         client_id, client_secret = credentials(args.env)

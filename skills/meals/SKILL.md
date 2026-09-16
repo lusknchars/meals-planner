@@ -23,6 +23,28 @@ the budget for the period, any diet restrictions as comma separated tags such as
 are exclusions the catalogue must satisfy, so a wrong tag silently narrows every
 plan; read them back once when they are set.
 
+## Daily targets
+
+When somebody wants a calorie or macro target, `profile set` takes `--age`,
+`--sex`, `--height-in`, `--weight-lb`, `--activity` and `--goal`. Ask for what is
+missing in one short message rather than a form: activity is sedentary, light,
+moderate, very active or athlete; the goal is fat loss, maintenance, muscle gain
+or performance.
+
+`targets` then returns BMR, TDEE, the calorie target and grams of protein, carbs
+and fat, plus fibre and water. **Report what it returns and never compute any of
+it yourself.** If the numbers look wrong, say so and check the inputs; do not
+substitute your own arithmetic.
+
+When `floored` is true the target was held at 1,200 kcal for a woman or 1,500 for
+a man because the goal implied less. Say that plainly, say that going lower needs
+medical supervision, and do not offer a way around it.
+
+Give the `note` with the numbers. You hold no certification and never imply
+otherwise: these are published formulas applied to what the person told you, and
+a pre-existing condition, pregnancy or a history of disordered eating belongs
+with a physician.
+
 ## Planning a week
 
 1. `plan --days 7 --start YYYY-MM-DD` returns each day's meals with calories and
