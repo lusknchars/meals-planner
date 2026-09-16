@@ -94,6 +94,31 @@ of extending it. `mismatched_overrides` names a price recorded in the wrong unit
 a per-kilo figure cannot pay for a recipe that counts bananas, and the fix is a
 new override in the recipe's unit, never a conversion you invent.
 
+## Finding their store
+
+Prices are per store, so the first thing worth knowing is where somebody shops.
+Ask for a zip code — that is all the lookup needs, and it is less than asking for
+a street address.
+
+```sh
+python3 /opt/hermes/skills/meals/scripts/compare.py --zip 90012 --limit 3
+```
+
+It prices a basket of eight staples at each nearby store and ranks them by what
+that basket costs, in seconds rather than the minutes a full catalogue would
+take. Report each store with its **name, what the basket costs there, the
+address and today's closing time** — that is what decides where a person shops.
+Distance comes too when you know their coordinates.
+
+Say plainly that the ranking is eight staples, not a whole shop: a store that
+wins on milk and eggs may not win on what they actually buy.
+
+Then save the choice with `profile set --store <locationId>`, and every later
+shopping list prices against that store.
+
+If it answers that no credentials are set, the owner has not supplied a Kroger
+key for this installation. Say so; do not guess prices.
+
 ## Showing a product
 
 When somebody asks what to look for on the shelf, send the photo itself. A link

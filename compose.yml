@@ -5,6 +5,16 @@ services:
     platform: linux/amd64
     environment:
       AGENT_ID: meals-planner
+      # Passed at run time, never baked into the image: the image is published
+      # and installed by strangers, and these are one installation's own keys.
+      # Set them in a .env beside this file, or export them before compose up.
+      KROGER_CLIENT_ID: ${KROGER_CLIENT_ID:-}
+      KROGER_CLIENT_SECRET: ${KROGER_CLIENT_SECRET:-}
+      USDA_API_KEY: ${USDA_API_KEY:-}
+      # Price and nutrition snapshots live in the volume, not the image: Kroger's
+      # terms cover calling their API for your own planning, not shipping their
+      # prices to everyone who installs this.
+      MEALS_PRICES_DIR: /var/lib/hermes/meals
     volumes:
       - type: bind
         source: ./plow-credentials
