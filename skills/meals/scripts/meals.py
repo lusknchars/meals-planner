@@ -241,11 +241,19 @@ def ingredient_macros(quantity, unit, record):
         return None
     share = grams / 100.0
     macros = {}
-    for key in ('protein_g', 'carb_g', 'fat_g', 'fiber_g'):
+    for key in ('protein_g', 'carb_g', 'fat_g'):
         value = per_100g.get(key)
         if value is None:
             return None
         macros[key] = value * share
+    # Fibre is the one field allowed to be missing on its own. USDA's Foundation
+    # rows systematically omit it -- bread, pasta, milk, chicken breast, avocado
+    # and yoghurt publish none -- and discarding the whole ingredient for that
+    # left ten of the fifteen shipped recipes counting no protein either. The
+    # protein, carbohydrate and fat are known, so they are reported, and the
+    # caller names whose fibre it could not count.
+    fibre = per_100g.get('fiber_g')
+    macros['fiber_g'] = None if fibre is None else fibre * share
     return macros
 
 
@@ -255,20 +263,29 @@ def day_macros(meals, recipes, nutrition):
         unknown = sorted({part['item'] for meal in meals
                           for part in recipes[meal['recipe_id']]['ingredients']})
         return {'protein_g': None, 'carb_g': None, 'fat_g': None, 'fiber_g': None,
-                'macros_unknown': unknown, 'macros_complete': False}
+                'macros_unknown': unknown, 'macros_complete': False,
+                'fiber_unknown': unknown}
     items = nutrition.get('items') or {}
     totals = {'protein_g': 0.0, 'carb_g': 0.0, 'fat_g': 0.0, 'fiber_g': 0.0}
-    unknown = set()
+    unknown, fibre_unknown = set(), set()
     for meal in meals:
         for part in recipes[meal['recipe_id']]['ingredients']:
             found = ingredient_macros(part['quantity'], part['unit'], items.get(part['item']))
             if found is None:
                 unknown.add(part['item'])
                 continue
-            for key in totals:
+            for key in ('protein_g', 'carb_g', 'fat_g'):
                 totals[key] += found[key]
+            # An ingredient can be counted for everything but fibre. Saying so
+            # is the difference between a day that ate no fibre and a day whose
+            # fibre nobody published.
+            if found['fiber_g'] is None:
+                fibre_unknown.add(part['item'])
+            else:
+                totals['fiber_g'] += found['fiber_g']
     return {**{key: round(value, 1) for key, value in totals.items()},
-            'macros_unknown': sorted(unknown), 'macros_complete': not unknown}
+            'macros_unknown': sorted(unknown), 'macros_complete': not unknown,
+            'fiber_unknown': sorted(fibre_unknown)}
 
 
 def priced(quantity, unit, candidates):

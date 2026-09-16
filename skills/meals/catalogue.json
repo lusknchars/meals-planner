@@ -1,663 +1,8 @@
 {
- "currency": "USD",
- "note": "Recipes are generic home cooking. The venues are SAMPLE data placed around one city so the ranking can be demonstrated offline; they are not a real restaurant directory. Point MEALS_CATALOGUE at your own file to use real places.",
- "sample_city": "Sao Paulo",
- "recipes": [
-  {
-   "id": "banana-smoothie",
-   "title": "Banana and peanut smoothie",
-   "slot": "breakfast",
-   "calories": 430,
-   "cost": 2.0,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "banana",
-     "quantity": 2,
-     "unit": "un",
-     "cost": 0.7
-    },
-    {
-     "item": "milk",
-     "quantity": 300,
-     "unit": "ml",
-     "cost": 0.75
-    },
-    {
-     "item": "peanut butter",
-     "quantity": 30,
-     "unit": "g",
-     "cost": 0.55
-    }
-   ]
-  },
-  {
-   "id": "bacon-eggs",
-   "title": "Bacon and eggs",
-   "slot": "breakfast",
-   "calories": 560,
-   "cost": 2.2,
-   "tags": [
-    "meat",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "eggs",
-     "quantity": 2,
-     "unit": "un",
-     "cost": 0.8
-    },
-    {
-     "item": "bacon",
-     "quantity": 60,
-     "unit": "g",
-     "cost": 1.4
-    }
-   ]
-  },
-  {
-   "id": "eggs-toast",
-   "title": "Eggs on toast",
-   "slot": "breakfast",
-   "calories": 520,
-   "cost": 1.9,
-   "tags": [
-    "vegetarian"
-   ],
-   "ingredients": [
-    {
-     "item": "eggs",
-     "quantity": 3,
-     "unit": "un",
-     "cost": 1.2
-    },
-    {
-     "item": "bread",
-     "quantity": 2,
-     "unit": "sl",
-     "cost": 0.5
-    },
-    {
-     "item": "butter",
-     "quantity": 10,
-     "unit": "g",
-     "cost": 0.2
-    }
-   ]
-  },
-  {
-   "id": "oats-berries",
-   "title": "Oats, yoghurt and berries",
-   "slot": "breakfast",
-   "calories": 470,
-   "cost": 3.0,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "oats",
-     "quantity": 80,
-     "unit": "g",
-     "cost": 0.6
-    },
-    {
-     "item": "berries",
-     "quantity": 100,
-     "unit": "g",
-     "cost": 1.5
-    },
-    {
-     "item": "yoghurt",
-     "quantity": 150,
-     "unit": "g",
-     "cost": 0.9
-    }
-   ]
-  },
-  {
-   "id": "tapioca-cheese",
-   "title": "Tapioca with cheese",
-   "slot": "breakfast",
-   "calories": 450,
-   "cost": 2.0,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "tapioca flour",
-     "quantity": 60,
-     "unit": "g",
-     "cost": 0.65
-    },
-    {
-     "item": "cheese",
-     "quantity": 60,
-     "unit": "g",
-     "cost": 1.35
-    }
-   ]
-  },
-  {
-   "id": "chicken-rice",
-   "title": "Chicken, rice and broccoli",
-   "slot": "lunch",
-   "calories": 720,
-   "cost": 4.0,
-   "tags": [
-    "meat",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "chicken breast",
-     "quantity": 180,
-     "unit": "g",
-     "cost": 2.8
-    },
-    {
-     "item": "rice",
-     "quantity": 90,
-     "unit": "g",
-     "cost": 0.6
-    },
-    {
-     "item": "broccoli",
-     "quantity": 80,
-     "unit": "g",
-     "cost": 0.6
-    }
-   ]
-  },
-  {
-   "id": "chickpea-salad",
-   "title": "Chickpea salad",
-   "slot": "lunch",
-   "calories": 600,
-   "cost": 2.6,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "chickpeas",
-     "quantity": 150,
-     "unit": "g",
-     "cost": 1.3
-    },
-    {
-     "item": "tomato",
-     "quantity": 100,
-     "unit": "g",
-     "cost": 0.6
-    },
-    {
-     "item": "olive oil",
-     "quantity": 15,
-     "unit": "ml",
-     "cost": 0.3
-    },
-    {
-     "item": "cucumber",
-     "quantity": 80,
-     "unit": "g",
-     "cost": 0.4
-    }
-   ]
-  },
-  {
-   "id": "lentil-bowl",
-   "title": "Lentils, rice and greens",
-   "slot": "lunch",
-   "calories": 650,
-   "cost": 2.5,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "lentils",
-     "quantity": 120,
-     "unit": "g",
-     "cost": 1.4
-    },
-    {
-     "item": "rice",
-     "quantity": 90,
-     "unit": "g",
-     "cost": 0.6
-    },
-    {
-     "item": "spinach",
-     "quantity": 60,
-     "unit": "g",
-     "cost": 0.5
-    }
-   ]
-  },
-  {
-   "id": "rice-beans-egg",
-   "title": "Rice, beans, egg and kale",
-   "slot": "lunch",
-   "calories": 700,
-   "cost": 2.45,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "rice",
-     "quantity": 100,
-     "unit": "g",
-     "cost": 0.65
-    },
-    {
-     "item": "beans",
-     "quantity": 120,
-     "unit": "g",
-     "cost": 0.95
-    },
-    {
-     "item": "eggs",
-     "quantity": 1,
-     "unit": "un",
-     "cost": 0.4
-    },
-    {
-     "item": "kale",
-     "quantity": 60,
-     "unit": "g",
-     "cost": 0.45
-    }
-   ]
-  },
-  {
-   "id": "veggie-pasta",
-   "title": "Pasta with tomato and courgette",
-   "slot": "lunch",
-   "calories": 680,
-   "cost": 2.3,
-   "tags": [
-    "vegetarian"
-   ],
-   "ingredients": [
-    {
-     "item": "pasta",
-     "quantity": 110,
-     "unit": "g",
-     "cost": 0.9
-    },
-    {
-     "item": "tomato sauce",
-     "quantity": 150,
-     "unit": "g",
-     "cost": 0.85
-    },
-    {
-     "item": "courgette",
-     "quantity": 100,
-     "unit": "g",
-     "cost": 0.55
-    }
-   ]
-  },
-  {
-   "id": "black-bean-soup",
-   "title": "Black bean soup",
-   "slot": "dinner",
-   "calories": 640,
-   "cost": 2.15,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "black beans",
-     "quantity": 150,
-     "unit": "g",
-     "cost": 1.1
-    },
-    {
-     "item": "onion",
-     "quantity": 80,
-     "unit": "g",
-     "cost": 0.35
-    },
-    {
-     "item": "carrot",
-     "quantity": 80,
-     "unit": "g",
-     "cost": 0.4
-    },
-    {
-     "item": "olive oil",
-     "quantity": 15,
-     "unit": "ml",
-     "cost": 0.3
-    }
-   ]
-  },
-  {
-   "id": "salmon-greens",
-   "title": "Salmon, potatoes and spinach",
-   "slot": "dinner",
-   "calories": 780,
-   "cost": 6.8,
-   "tags": [
-    "fish",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "salmon fillet",
-     "quantity": 160,
-     "unit": "g",
-     "cost": 5.5
-    },
-    {
-     "item": "spinach",
-     "quantity": 80,
-     "unit": "g",
-     "cost": 0.7
-    },
-    {
-     "item": "potatoes",
-     "quantity": 150,
-     "unit": "g",
-     "cost": 0.6
-    }
-   ]
-  },
-  {
-   "id": "sweet-potato-bowl",
-   "title": "Sweet potato and quinoa bowl",
-   "slot": "dinner",
-   "calories": 700,
-   "cost": 3.5,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "sweet potato",
-     "quantity": 250,
-     "unit": "g",
-     "cost": 1.2
-    },
-    {
-     "item": "quinoa",
-     "quantity": 80,
-     "unit": "g",
-     "cost": 1.4
-    },
-    {
-     "item": "avocado",
-     "quantity": 1,
-     "unit": "un",
-     "cost": 0.9
-    }
-   ]
-  },
-  {
-   "id": "tofu-stirfry",
-   "title": "Tofu stir fry",
-   "slot": "dinner",
-   "calories": 690,
-   "cost": 3.9,
-   "tags": [
-    "vegetarian"
-   ],
-   "ingredients": [
-    {
-     "item": "tofu",
-     "quantity": 200,
-     "unit": "g",
-     "cost": 2.4
-    },
-    {
-     "item": "rice",
-     "quantity": 90,
-     "unit": "g",
-     "cost": 0.6
-    },
-    {
-     "item": "peppers",
-     "quantity": 100,
-     "unit": "g",
-     "cost": 0.7
-    },
-    {
-     "item": "soy sauce",
-     "quantity": 15,
-     "unit": "ml",
-     "cost": 0.2
-    }
-   ]
-  },
-  {
-   "id": "veg-omelette",
-   "title": "Mushroom and cheese omelette",
-   "slot": "dinner",
-   "calories": 620,
-   "cost": 3.1,
-   "tags": [
-    "vegetarian",
-    "gluten-free"
-   ],
-   "ingredients": [
-    {
-     "item": "eggs",
-     "quantity": 3,
-     "unit": "un",
-     "cost": 1.2
-    },
-    {
-     "item": "mushrooms",
-     "quantity": 100,
-     "unit": "g",
-     "cost": 1.0
-    },
-    {
-     "item": "cheese",
-     "quantity": 40,
-     "unit": "g",
-     "cost": 0.9
-    }
-   ]
-  }
- ],
- "venues": [
-  {
-   "id": "green-corner",
-   "name": "Green Corner",
-   "cuisine": "salads and bowls",
-   "lat": -23.559,
-   "lon": -46.66,
-   "eta_min": 22,
-   "sample": true,
-   "link": "https://example.org/sample-venue/green-corner",
-   "items": [
-    {
-     "title": "Falafel bowl",
-     "calories": 640,
-     "price": 11.0,
-     "tags": [
-      "vegetarian"
-     ]
-    },
-    {
-     "title": "Grain and greens salad",
-     "calories": 520,
-     "price": 9.5,
-     "tags": [
-      "vegetarian",
-      "gluten-free"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "soup-spoon",
-   "name": "Soup Spoon",
-   "cuisine": "soups",
-   "lat": -23.5633,
-   "lon": -46.6702,
-   "eta_min": 20,
-   "sample": true,
-   "link": "https://example.org/sample-venue/soup-spoon",
-   "items": [
-    {
-     "title": "Lentil soup",
-     "calories": 430,
-     "price": 8.5,
-     "tags": [
-      "vegetarian",
-      "gluten-free"
-     ]
-    },
-    {
-     "title": "Chicken soup",
-     "calories": 460,
-     "price": 9.0,
-     "tags": [
-      "meat",
-      "gluten-free"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "pasta-bar",
-   "name": "Pasta Bar",
-   "cuisine": "italian",
-   "lat": -23.5648,
-   "lon": -46.6512,
-   "eta_min": 28,
-   "sample": true,
-   "link": "https://example.org/sample-venue/pasta-bar",
-   "items": [
-    {
-     "title": "Tomato pasta",
-     "calories": 780,
-     "price": 12.0,
-     "tags": [
-      "vegetarian"
-     ]
-    },
-    {
-     "title": "Caprese plate",
-     "calories": 430,
-     "price": 10.0,
-     "tags": [
-      "vegetarian",
-      "gluten-free"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "grill-house",
-   "name": "Grill House",
-   "cuisine": "grill",
-   "lat": -23.5555,
-   "lon": -46.6501,
-   "eta_min": 30,
-   "sample": true,
-   "link": "https://example.org/sample-venue/grill-house",
-   "items": [
-    {
-     "title": "Steak plate",
-     "calories": 1100,
-     "price": 16.0,
-     "tags": [
-      "meat"
-     ]
-    },
-    {
-     "title": "Grilled chicken",
-     "calories": 640,
-     "price": 13.5,
-     "tags": [
-      "meat",
-      "gluten-free"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "burger-lab",
-   "name": "Burger Lab",
-   "cuisine": "burgers",
-   "lat": -23.5501,
-   "lon": -46.6702,
-   "eta_min": 25,
-   "sample": true,
-   "link": "https://example.org/sample-venue/burger-lab",
-   "items": [
-    {
-     "title": "Veggie burger",
-     "calories": 620,
-     "price": 12.0,
-     "tags": [
-      "vegetarian"
-     ]
-    },
-    {
-     "title": "Double burger",
-     "calories": 980,
-     "price": 15.0,
-     "tags": [
-      "meat"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "sushi-ten",
-   "name": "Sushi Ten",
-   "cuisine": "japanese",
-   "lat": -23.5702,
-   "lon": -46.6488,
-   "eta_min": 35,
-   "sample": true,
-   "link": "https://example.org/sample-venue/sushi-ten",
-   "items": [
-    {
-     "title": "Salmon set",
-     "calories": 620,
-     "price": 18.0,
-     "tags": [
-      "fish"
-     ]
-    },
-    {
-     "title": "Vegetable rolls",
-     "calories": 480,
-     "price": 12.5,
-     "tags": [
-      "vegetarian"
-     ]
-    }
-   ]
-  }
- ],
  "categories": {
   "avocado": "Produce",
   "bacon": "Meat & Fish",
   "banana": "Produce",
-  "beans": "Pantry",
   "berries": "Produce",
   "black beans": "Pantry",
   "bread": "Bakery",
@@ -692,5 +37,659 @@
   "tomato": "Produce",
   "tomato sauce": "Pantry",
   "yoghurt": "Dairy"
- }
+ },
+ "currency": "USD",
+ "note": "Recipes are generic home cooking. The venues are SAMPLE data placed around one city so the ranking can be demonstrated offline; they are not a real restaurant directory. Point MEALS_CATALOGUE at your own file to use real places.",
+ "recipes": [
+  {
+   "calories": 430,
+   "cost": 2.0,
+   "id": "banana-smoothie",
+   "ingredients": [
+    {
+     "cost": 0.7,
+     "item": "banana",
+     "quantity": 2,
+     "unit": "un"
+    },
+    {
+     "cost": 0.75,
+     "item": "milk",
+     "quantity": 300,
+     "unit": "ml"
+    },
+    {
+     "cost": 0.55,
+     "item": "peanut butter",
+     "quantity": 30,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Banana and peanut smoothie"
+  },
+  {
+   "calories": 560,
+   "cost": 2.2,
+   "id": "bacon-eggs",
+   "ingredients": [
+    {
+     "cost": 0.8,
+     "item": "eggs",
+     "quantity": 2,
+     "unit": "un"
+    },
+    {
+     "cost": 1.4,
+     "item": "bacon",
+     "quantity": 60,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Bacon and eggs"
+  },
+  {
+   "calories": 520,
+   "cost": 1.9,
+   "id": "eggs-toast",
+   "ingredients": [
+    {
+     "cost": 1.2,
+     "item": "eggs",
+     "quantity": 3,
+     "unit": "un"
+    },
+    {
+     "cost": 0.5,
+     "item": "bread",
+     "quantity": 2,
+     "unit": "sl"
+    },
+    {
+     "cost": 0.2,
+     "item": "butter",
+     "quantity": 10,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian"
+   ],
+   "title": "Eggs on toast"
+  },
+  {
+   "calories": 470,
+   "cost": 3.0,
+   "id": "oats-berries",
+   "ingredients": [
+    {
+     "cost": 0.6,
+     "item": "oats",
+     "quantity": 80,
+     "unit": "g"
+    },
+    {
+     "cost": 1.5,
+     "item": "berries",
+     "quantity": 100,
+     "unit": "g"
+    },
+    {
+     "cost": 0.9,
+     "item": "yoghurt",
+     "quantity": 150,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Oats, yoghurt and berries"
+  },
+  {
+   "calories": 450,
+   "cost": 2.0,
+   "id": "tapioca-cheese",
+   "ingredients": [
+    {
+     "cost": 0.65,
+     "item": "tapioca flour",
+     "quantity": 60,
+     "unit": "g"
+    },
+    {
+     "cost": 1.35,
+     "item": "cheese",
+     "quantity": 60,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Tapioca with cheese"
+  },
+  {
+   "calories": 720,
+   "cost": 4.0,
+   "id": "chicken-rice",
+   "ingredients": [
+    {
+     "cost": 2.8,
+     "item": "chicken breast",
+     "quantity": 180,
+     "unit": "g"
+    },
+    {
+     "cost": 0.6,
+     "item": "rice",
+     "quantity": 90,
+     "unit": "g"
+    },
+    {
+     "cost": 0.6,
+     "item": "broccoli",
+     "quantity": 80,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Chicken, rice and broccoli"
+  },
+  {
+   "calories": 600,
+   "cost": 2.6,
+   "id": "chickpea-salad",
+   "ingredients": [
+    {
+     "cost": 1.3,
+     "item": "chickpeas",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 0.6,
+     "item": "tomato",
+     "quantity": 100,
+     "unit": "g"
+    },
+    {
+     "cost": 0.3,
+     "item": "olive oil",
+     "quantity": 15,
+     "unit": "ml"
+    },
+    {
+     "cost": 0.4,
+     "item": "cucumber",
+     "quantity": 80,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Chickpea salad"
+  },
+  {
+   "calories": 650,
+   "cost": 2.5,
+   "id": "lentil-bowl",
+   "ingredients": [
+    {
+     "cost": 1.4,
+     "item": "lentils",
+     "quantity": 120,
+     "unit": "g"
+    },
+    {
+     "cost": 0.6,
+     "item": "rice",
+     "quantity": 90,
+     "unit": "g"
+    },
+    {
+     "cost": 0.5,
+     "item": "spinach",
+     "quantity": 60,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Lentils, rice and greens"
+  },
+  {
+   "calories": 700,
+   "cost": 2.45,
+   "id": "rice-beans-egg",
+   "ingredients": [
+    {
+     "cost": 0.65,
+     "item": "rice",
+     "quantity": 100,
+     "unit": "g"
+    },
+    {
+     "cost": 0.95,
+     "item": "black beans",
+     "quantity": 120,
+     "unit": "g"
+    },
+    {
+     "cost": 0.4,
+     "item": "eggs",
+     "quantity": 1,
+     "unit": "un"
+    },
+    {
+     "cost": 0.45,
+     "item": "kale",
+     "quantity": 60,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Rice, beans, egg and kale"
+  },
+  {
+   "calories": 680,
+   "cost": 2.3,
+   "id": "veggie-pasta",
+   "ingredients": [
+    {
+     "cost": 0.9,
+     "item": "pasta",
+     "quantity": 110,
+     "unit": "g"
+    },
+    {
+     "cost": 0.85,
+     "item": "tomato sauce",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 0.55,
+     "item": "courgette",
+     "quantity": 100,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "vegetarian"
+   ],
+   "title": "Pasta with tomato and courgette"
+  },
+  {
+   "calories": 640,
+   "cost": 2.15,
+   "id": "black-bean-soup",
+   "ingredients": [
+    {
+     "cost": 1.1,
+     "item": "black beans",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 0.35,
+     "item": "onion",
+     "quantity": 80,
+     "unit": "g"
+    },
+    {
+     "cost": 0.4,
+     "item": "carrot",
+     "quantity": 80,
+     "unit": "g"
+    },
+    {
+     "cost": 0.3,
+     "item": "olive oil",
+     "quantity": 15,
+     "unit": "ml"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Black bean soup"
+  },
+  {
+   "calories": 780,
+   "cost": 6.8,
+   "id": "salmon-greens",
+   "ingredients": [
+    {
+     "cost": 5.5,
+     "item": "salmon fillet",
+     "quantity": 160,
+     "unit": "g"
+    },
+    {
+     "cost": 0.7,
+     "item": "spinach",
+     "quantity": 80,
+     "unit": "g"
+    },
+    {
+     "cost": 0.6,
+     "item": "potatoes",
+     "quantity": 150,
+     "unit": "g"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "fish",
+    "gluten-free"
+   ],
+   "title": "Salmon, potatoes and spinach"
+  },
+  {
+   "calories": 700,
+   "cost": 3.5,
+   "id": "sweet-potato-bowl",
+   "ingredients": [
+    {
+     "cost": 1.2,
+     "item": "sweet potato",
+     "quantity": 250,
+     "unit": "g"
+    },
+    {
+     "cost": 1.4,
+     "item": "quinoa",
+     "quantity": 80,
+     "unit": "g"
+    },
+    {
+     "cost": 0.9,
+     "item": "avocado",
+     "quantity": 1,
+     "unit": "un"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Sweet potato and quinoa bowl"
+  },
+  {
+   "calories": 690,
+   "cost": 3.9,
+   "id": "tofu-stirfry",
+   "ingredients": [
+    {
+     "cost": 2.4,
+     "item": "tofu",
+     "quantity": 200,
+     "unit": "g"
+    },
+    {
+     "cost": 0.6,
+     "item": "rice",
+     "quantity": 90,
+     "unit": "g"
+    },
+    {
+     "cost": 0.7,
+     "item": "peppers",
+     "quantity": 100,
+     "unit": "g"
+    },
+    {
+     "cost": 0.2,
+     "item": "soy sauce",
+     "quantity": 15,
+     "unit": "ml"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian"
+   ],
+   "title": "Tofu stir fry"
+  },
+  {
+   "calories": 620,
+   "cost": 3.1,
+   "id": "veg-omelette",
+   "ingredients": [
+    {
+     "cost": 1.2,
+     "item": "eggs",
+     "quantity": 3,
+     "unit": "un"
+    },
+    {
+     "cost": 1.0,
+     "item": "mushrooms",
+     "quantity": 100,
+     "unit": "g"
+    },
+    {
+     "cost": 0.9,
+     "item": "cheese",
+     "quantity": 40,
+     "unit": "g"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Mushroom and cheese omelette"
+  }
+ ],
+ "sample_city": "Sao Paulo",
+ "venues": [
+  {
+   "cuisine": "salads and bowls",
+   "eta_min": 22,
+   "id": "green-corner",
+   "items": [
+    {
+     "calories": 640,
+     "price": 11.0,
+     "tags": [
+      "vegetarian"
+     ],
+     "title": "Falafel bowl"
+    },
+    {
+     "calories": 520,
+     "price": 9.5,
+     "tags": [
+      "vegetarian",
+      "gluten-free"
+     ],
+     "title": "Grain and greens salad"
+    }
+   ],
+   "lat": -23.559,
+   "link": "https://example.org/sample-venue/green-corner",
+   "lon": -46.66,
+   "name": "Green Corner",
+   "sample": true
+  },
+  {
+   "cuisine": "soups",
+   "eta_min": 20,
+   "id": "soup-spoon",
+   "items": [
+    {
+     "calories": 430,
+     "price": 8.5,
+     "tags": [
+      "vegetarian",
+      "gluten-free"
+     ],
+     "title": "Lentil soup"
+    },
+    {
+     "calories": 460,
+     "price": 9.0,
+     "tags": [
+      "meat",
+      "gluten-free"
+     ],
+     "title": "Chicken soup"
+    }
+   ],
+   "lat": -23.5633,
+   "link": "https://example.org/sample-venue/soup-spoon",
+   "lon": -46.6702,
+   "name": "Soup Spoon",
+   "sample": true
+  },
+  {
+   "cuisine": "italian",
+   "eta_min": 28,
+   "id": "pasta-bar",
+   "items": [
+    {
+     "calories": 780,
+     "price": 12.0,
+     "tags": [
+      "vegetarian"
+     ],
+     "title": "Tomato pasta"
+    },
+    {
+     "calories": 430,
+     "price": 10.0,
+     "tags": [
+      "vegetarian",
+      "gluten-free"
+     ],
+     "title": "Caprese plate"
+    }
+   ],
+   "lat": -23.5648,
+   "link": "https://example.org/sample-venue/pasta-bar",
+   "lon": -46.6512,
+   "name": "Pasta Bar",
+   "sample": true
+  },
+  {
+   "cuisine": "grill",
+   "eta_min": 30,
+   "id": "grill-house",
+   "items": [
+    {
+     "calories": 1100,
+     "price": 16.0,
+     "tags": [
+      "meat"
+     ],
+     "title": "Steak plate"
+    },
+    {
+     "calories": 640,
+     "price": 13.5,
+     "tags": [
+      "meat",
+      "gluten-free"
+     ],
+     "title": "Grilled chicken"
+    }
+   ],
+   "lat": -23.5555,
+   "link": "https://example.org/sample-venue/grill-house",
+   "lon": -46.6501,
+   "name": "Grill House",
+   "sample": true
+  },
+  {
+   "cuisine": "burgers",
+   "eta_min": 25,
+   "id": "burger-lab",
+   "items": [
+    {
+     "calories": 620,
+     "price": 12.0,
+     "tags": [
+      "vegetarian"
+     ],
+     "title": "Veggie burger"
+    },
+    {
+     "calories": 980,
+     "price": 15.0,
+     "tags": [
+      "meat"
+     ],
+     "title": "Double burger"
+    }
+   ],
+   "lat": -23.5501,
+   "link": "https://example.org/sample-venue/burger-lab",
+   "lon": -46.6702,
+   "name": "Burger Lab",
+   "sample": true
+  },
+  {
+   "cuisine": "japanese",
+   "eta_min": 35,
+   "id": "sushi-ten",
+   "items": [
+    {
+     "calories": 620,
+     "price": 18.0,
+     "tags": [
+      "fish"
+     ],
+     "title": "Salmon set"
+    },
+    {
+     "calories": 480,
+     "price": 12.5,
+     "tags": [
+      "vegetarian"
+     ],
+     "title": "Vegetable rolls"
+    }
+   ],
+   "lat": -23.5702,
+   "link": "https://example.org/sample-venue/sushi-ten",
+   "lon": -46.6488,
+   "name": "Sushi Ten",
+   "sample": true
+  }
+ ]
 }

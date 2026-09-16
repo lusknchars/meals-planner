@@ -65,6 +65,56 @@ NUTRITION = {
 }
 
 
+SCRIPTS = Path(__file__).resolve().parents[1] / 'skills/meals/scripts'
+sys.path.insert(0, str(SCRIPTS))
+import meals  # noqa: E402
+
+
+class FibreOnItsOwn(unittest.TestCase):
+    """USDA's Foundation rows omit fibre for foods that plainly have it.
+
+    Bread, pasta, milk, chicken breast, avocado and yoghurt all publish none.
+    Treating that as an uncountable ingredient dropped its protein and fat too,
+    so ten of the fifteen shipped recipes reported a day's macros with the
+    chicken, the milk or the bread silently missing. Borrowing the figure from
+    a sibling row was tried and abandoned: it produced white bread at 9.2 g and
+    breaded tenders' fibre for a food that has none. Unknown stays unknown, and
+    everything else is still counted.
+    """
+
+    RICE_NO_FIBRE = {'per_100g': {'kcal': 365.0, 'protein_g': 7.13, 'carb_g': 79.95,
+                                  'fat_g': 0.66, 'fiber_g': None},
+                     'portions': [], 'serving_g': None}
+
+    def test_the_other_macros_survive_a_missing_fibre(self):
+        found = meals.ingredient_macros(100, 'g', self.RICE_NO_FIBRE)
+        self.assertIsNotNone(found, 'a missing fibre is not an uncountable ingredient')
+        self.assertAlmostEqual(found['protein_g'], 7.13, delta=0.01)
+        self.assertAlmostEqual(found['fat_g'], 0.66, delta=0.01)
+        self.assertIsNone(found['fiber_g'], 'never invent a zero')
+
+    def test_a_missing_protein_still_makes_it_uncountable(self):
+        broken = {'per_100g': {'protein_g': None, 'carb_g': 1.0, 'fat_g': 1.0,
+                               'fiber_g': 1.0}, 'serving_g': None}
+        self.assertIsNone(meals.ingredient_macros(100, 'g', broken))
+
+    def test_a_day_names_whose_fibre_it_could_not_count(self):
+        recipes = {'r': {'ingredients': [
+            {'item': 'rice', 'quantity': 100, 'unit': 'g'},
+            {'item': 'oats', 'quantity': 100, 'unit': 'g'}]}}
+        nutrition = {'items': {'rice': self.RICE_NO_FIBRE,
+                               'oats': {'per_100g': {'protein_g': 13.15, 'carb_g': 67.7,
+                                                     'fat_g': 6.52, 'fiber_g': 10.1},
+                                        'serving_g': None}}}
+        day = meals.day_macros([{'recipe_id': 'r'}], recipes, nutrition)
+        self.assertAlmostEqual(day['protein_g'], 20.3, delta=0.1)
+        self.assertEqual(day['fiber_unknown'], ['rice'])
+        self.assertEqual(day['macros_unknown'], [], 'rice was counted, just not its fibre')
+        self.assertTrue(day['macros_complete'])
+        self.assertAlmostEqual(day['fiber_g'], 10.1, delta=0.1,
+                               msg="the fibre that IS published is still counted")
+
+
 class DayMacros(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

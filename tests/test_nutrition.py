@@ -289,6 +289,90 @@ class Record(unittest.TestCase):
         self.assertIsNone(row['serving_g'], 'no published portion means no serving weight')
 
 
+TAPIOCA_CANDIDATES = [
+    {'fdcId': 168910, 'dataType': 'SR Legacy', 'description': 'Tapioca, pearl, dry'},
+    {'fdcId': 1, 'dataType': 'SR Legacy', 'description': 'Puddings, tapioca, dry mix'},
+]
+
+
+class RequiredWords(unittest.TestCase):
+    """USDA does not name every food the way a recipe does."""
+
+    def test_an_ingredient_named_for_a_form_usda_never_uses(self):
+        # "Tapioca, pearl, dry" is the FIRST row USDA offers and it was refused
+        # for lacking "flour", so the ingredient matched nothing at all.
+        chosen = refresh.best_food(TAPIOCA_CANDIDATES, 'tapioca flour', 'tapioca pearl dry')
+        self.assertIsNotNone(chosen, 'the right row was already the first candidate')
+        self.assertEqual(chosen['description'], 'Tapioca, pearl, dry')
+
+    def test_an_ingredient_without_an_override_still_needs_all_its_words(self):
+        self.assertIsNone(refresh.best_food(TAPIOCA_CANDIDATES, 'almond flour', 'almond flour'),
+                          'almond flour really must say flour')
+
+
+class Pinning(unittest.TestCase):
+    """Some foods name their USDA row outright rather than search for it."""
+
+    def test_a_pinned_ingredient_skips_the_search(self):
+        fetch = Recorder([(200, DETAIL_REPLY)])
+        refresh.USDA_FDC['banana'] = 173944
+        self.addCleanup(refresh.USDA_FDC.pop, 'banana', None)
+        snapshot = refresh.fetch_nutrition(fetch, 'KEY123', ['banana'])
+        self.assertEqual(len(fetch.requests), 1, 'a pinned row needs no search')
+        self.assertIn('/food/173944', fetch.requests[0]['url'])
+        self.assertEqual(snapshot['items']['banana']['fdc_id'], 173944)
+
+    def test_an_unpinned_ingredient_still_searches(self):
+        fetch = Recorder([(200, SEARCH_REPLY), (200, DETAIL_REPLY)])
+        refresh.fetch_nutrition(fetch, 'KEY123', ['banana'])
+        self.assertEqual(len(fetch.requests), 2)
+        self.assertIn('/foods/search', fetch.requests[0]['url'])
+
+
+class ShippedSnapshot(unittest.TestCase):
+    """The audit nothing performed, which is why ricotta shipped as milk.
+
+    Every test here reads the snapshot that actually goes out. "38/38 matched"
+    was true while butter was almond butter, rice was wild rice, and tomato
+    sauce was a frozen cheese turnover: a count says nothing about whether a
+    row is the right food.
+    """
+
+    SNAPSHOT = Path(__file__).resolve().parents[1] / 'skills/meals/nutrition.json'
+
+    def setUp(self):
+        self.items = json.loads(self.SNAPSHOT.read_text())['items']
+
+    def test_every_pinned_ingredient_uses_the_row_it_was_pinned_to(self):
+        for name, fdc in refresh.USDA_FDC.items():
+            with self.subTest(name):
+                self.assertIn(name, self.items, f'{name} is pinned but not shipped')
+                self.assertEqual(self.items[name]['fdc_id'], fdc,
+                                 f'{name} drifted off its pinned row')
+
+    def test_every_ingredient_matched_something(self):
+        for name, row in self.items.items():
+            with self.subTest(name):
+                self.assertIsNotNone(row, f'{name} matched no USDA food')
+
+    def test_every_ingredient_has_calories(self):
+        for name, row in self.items.items():
+            with self.subTest(name):
+                self.assertIsNotNone(row['per_100g']['kcal'],
+                                     f'{name} shipped without calories')
+
+    def test_no_ingredient_is_matched_to_a_different_food(self):
+        for name, row in self.items.items():
+            override = refresh.USDA_REQUIRED.get(name)
+            asked = refresh.search_term(name).lower().replace(',', ' ')
+            wanted = list(override) if override else [w for w in asked.split() if len(w) > 2]
+            description = (row['description'] or '').lower()
+            with self.subTest(name):
+                self.assertTrue(
+                    any(word in description for word in wanted),
+                    f'{name} is filed under {row["description"]!r}, which names none of {wanted}')
+
+
 class Snapshot(unittest.TestCase):
     def test_terms_are_searched_by_alias_and_keyed_by_the_catalogue_name(self):
         fetch = Recorder([(200, SEARCH_REPLY), (200, DETAIL_REPLY)])

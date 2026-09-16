@@ -404,6 +404,38 @@ USDA_QUERIES = {
     # the plain stuff, and a bare search had settled on ricotta cheese.
     'milk': 'milk whole 3.25% milkfat',
 }
+# Ingredients whose own name carries a word USDA never uses for the food. The
+# reject list already drops such a word (it IS the ingredient, so it cannot
+# disqualify it) but the word stayed REQUIRED, and "Tapioca, pearl, dry" -- the
+# first candidate USDA offers -- was refused for lacking "flour". The ingredient
+# went unmatched entirely, so a tapioca breakfast counted no macros at all.
+# Narrow on purpose: "almond flour" really must say flour.
+USDA_REQUIRED = {'tapioca flour': ('tapioca',)}
+# Ingredients whose reference row is named outright, because search ranking is
+# not good enough to pick a food unattended and "38/38 matched" hid a catalogue
+# full of the wrong ones: almond butter for butter, wild rice for rice, green
+# snap beans for the beans in rice and beans, and a frozen cheese turnover for
+# tomato sauce. Every id below was read before it was written down.
+#
+# Mostly SR Legacy: it publishes fibre and calories where Foundation omits both,
+# which is also how bread, pasta and olive oil got their calories back.
+USDA_FDC = {
+    'bread': 174924,           # Bread, white, commercially prepared
+    'butter': 173410,          # Butter, salted          (was: Almond butter, creamy)
+    'carrot': 170393,          # Carrots, raw            (was: Carrots, baby, raw)
+    'cheese': 328637,          # Cheese, cheddar         (was: Cheese, caraway)
+    'chicken breast': 171077,  # breast, skinless, boneless -- a recipe never means the skin
+    'mushrooms': 169251,       # Mushrooms, white, raw   (was: enoki)
+    'olive oil': 171413,       # Oil, olive, salad or cooking (was: extra light, no calories)
+    'onion': 170000,           # Onions, raw             (was: Onions, red, raw)
+    'pasta': 169736,           # Pasta, dry, enriched
+    'potatoes': 170026,        # Potatoes, flesh and skin, raw (was: the skin alone)
+    'rice': 168877,            # Rice, white, long-grain, raw (was: Wild rice)
+    'soy sauce': 174277,       # soy and wheat (shoyu)   (was: tamari)
+    'tomato': 170457,          # Tomatoes, red, ripe, raw, year round average
+    'tomato sauce': 170054,    # Tomato products, canned, sauce (was: a frozen turnover)
+    'black beans': 173734,     # Beans, black, mature seeds, raw
+}
 
 
 def usda_query(ingredient):
@@ -425,7 +457,9 @@ def best_food(candidates, ingredient, search):
     # so fall back to the ingredient's head word when the full phrase finds
     # nothing. The search string still decides what USDA was asked for.
     words = [word for word in re.split(r'[^a-z0-9]+', (ingredient or '').lower()) if word]
-    required = [word for word in words if word not in USDA_GENERIC] or words
+    override = USDA_REQUIRED.get((ingredient or '').strip().lower())
+    required = list(override) if override else (
+        [word for word in words if word not in USDA_GENERIC] or words)
     # A form word that IS the ingredient cannot disqualify it: rejecting "oil"
     # threw away olive oil, "bread" threw away bread, "sauce" threw away soy sauce.
     # Whole words only. "oil" is a reject word and "boiled" contains it, which
@@ -565,11 +599,24 @@ def fetch_nutrition(fetch, api_key, terms):
     while remaining:
         term = remaining.pop(0)
         try:
-            found = usda_search(fetch, api_key, usda_query(term), ingredient=term)
+            # A pinned row skips the search entirely: the question "which USDA
+            # food is this" was answered once, by reading it, and a ranking
+            # cannot un-answer it next time the index shifts.
+            pinned = USDA_FDC.get(term)
+            found = ({'fdc_id': pinned, 'description': None} if pinned
+                     else usda_search(fetch, api_key, usda_query(term), ingredient=term))
             if not found:
                 items[term] = None
                 unmatched.append(term)
                 continue
+            # Deliberately no fibre fallback. Foundation rows omit fibre for
+            # bread, pasta, milk, chicken and avocado, and borrowing it from an
+            # SR Legacy sibling was tried three ways: every one produced a
+            # plausible number from the wrong food -- "Bread, white wheat" at
+            # 9.2 g for white bread, breaded chicken tenders' 1.1 g for a food
+            # with no fibre at all, a boxed beef pasta mix for dry spaghetti.
+            # The ingredient keeps its own row's unknown instead, and
+            # ``ingredient_macros`` reports the protein and fat it does know.
             items[term] = nutrition_record(usda_food(fetch, api_key, found['fdc_id']))
         except (ValueError, OSError) as refusal:
             # OSError covers URLError: an SSL handshake timeout mid-run threw away
