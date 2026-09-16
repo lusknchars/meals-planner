@@ -1,6 +1,60 @@
 {
- "captured": "2026-09-16T18:41:59+00:00",
+ "captured": "2026-09-16T18:51:59+00:00",
  "items": {
+  "almonds": {
+   "description": "Nuts, almonds, dry roasted, without salt added",
+   "fdc_id": 170158,
+   "per_100g": {
+    "carb_g": 21.01,
+    "energy_source": "kcal as published",
+    "fat_g": 52.54,
+    "fiber_g": 10.9,
+    "kcal": 598.0,
+    "protein_g": 20.96
+   },
+   "portions": [
+    {
+     "grams": 138.0,
+     "label": "cup whole kernels"
+    },
+    {
+     "grams": 28.35,
+     "label": "oz (22 whole kernels)"
+    }
+   ],
+   "serving_g": 138.0
+  },
+  "apple": {
+   "description": "Apples, raw, fuji, with skin (Includes foods for USDA's Food Distribution Program)",
+   "fdc_id": 167793,
+   "per_100g": {
+    "carb_g": 15.22,
+    "energy_source": "kcal as published",
+    "fat_g": 0.18,
+    "fiber_g": 2.1,
+    "kcal": 63.0,
+    "protein_g": 0.2
+   },
+   "portions": [
+    {
+     "grams": 236.0,
+     "label": "large"
+    },
+    {
+     "grams": 192.0,
+     "label": "medium"
+    },
+    {
+     "grams": 158.0,
+     "label": "small"
+    },
+    {
+     "grams": 109.0,
+     "label": "cup, sliced"
+    }
+   ],
+   "serving_g": 236.0
+  },
   "avocado": {
    "description": "Avocado, Hass, peeled, raw",
    "fdc_id": 2710824,
@@ -272,6 +326,41 @@
    ],
    "serving_g": 110.0
   },
+  "cauliflower": {
+   "description": "Cauliflower, raw",
+   "fdc_id": 169986,
+   "per_100g": {
+    "carb_g": 4.97,
+    "energy_source": "kcal as published",
+    "fat_g": 0.28,
+    "fiber_g": 2.0,
+    "kcal": 25.0,
+    "protein_g": 1.92
+   },
+   "portions": [
+    {
+     "grams": 13.0,
+     "label": "floweret"
+    },
+    {
+     "grams": 588.0,
+     "label": "head medium (5-6\" dia.)"
+    },
+    {
+     "grams": 265.0,
+     "label": "head small (4\" dia.)"
+    },
+    {
+     "grams": 840.0,
+     "label": "head large (6-7\" dia.)"
+    },
+    {
+     "grams": 107.0,
+     "label": "cup chopped (1/2\" pieces)"
+    }
+   ],
+   "serving_g": 13.0
+  },
   "cheese": {
    "description": "Cheese, cheddar",
    "fdc_id": 328637,
@@ -349,6 +438,29 @@
    ],
    "serving_g": 12.5
   },
+  "cottage cheese": {
+   "description": "Cheese, cottage, lowfat, 2% milkfat",
+   "fdc_id": 172182,
+   "per_100g": {
+    "carb_g": 4.76,
+    "energy_source": "kcal as published",
+    "fat_g": 2.27,
+    "fiber_g": 0.0,
+    "kcal": 81.0,
+    "protein_g": 10.45
+   },
+   "portions": [
+    {
+     "grams": 226.0,
+     "label": "cup (not packed)"
+    },
+    {
+     "grams": 113.0,
+     "label": "oz"
+    }
+   ],
+   "serving_g": 226.0
+  },
   "courgette": {
    "description": "Squash, summer, green, zucchini, includes skin, raw",
    "fdc_id": 2685568,
@@ -367,6 +479,25 @@
     }
    ],
    "serving_g": 85.0
+  },
+  "couscous": {
+   "description": "Couscous, dry",
+   "fdc_id": 169699,
+   "per_100g": {
+    "carb_g": 77.43,
+    "energy_source": "kcal as published",
+    "fat_g": 0.64,
+    "fiber_g": 5.0,
+    "kcal": 376.0,
+    "protein_g": 12.76
+   },
+   "portions": [
+    {
+     "grams": 173.0,
+     "label": "cup"
+    }
+   ],
+   "serving_g": 173.0
   },
   "cucumber": {
    "description": "Cucumber, with peel, raw",
@@ -409,6 +540,110 @@
     }
    ],
    "serving_g": 50.3
+  },
+  "feta": {
+   "description": "Cheese, feta",
+   "fdc_id": 173420,
+   "per_100g": {
+    "carb_g": 3.88,
+    "energy_source": "kcal as published",
+    "fat_g": 21.49,
+    "fiber_g": 0.0,
+    "kcal": 265.0,
+    "protein_g": 14.21
+   },
+   "portions": [
+    {
+     "grams": 150.0,
+     "label": "cup, crumbled"
+    },
+    {
+     "grams": 28.35,
+     "label": "oz"
+    },
+    {
+     "grams": 17.0,
+     "label": "cubic inch"
+    },
+    {
+     "grams": 38.0,
+     "label": "wedge (1.33 oz)"
+    }
+   ],
+   "serving_g": 150.0
+  },
+  "garlic": {
+   "description": "Garlic, raw",
+   "fdc_id": 169230,
+   "per_100g": {
+    "carb_g": 33.06,
+    "energy_source": "kcal as published",
+    "fat_g": 0.5,
+    "fiber_g": 2.1,
+    "kcal": 149.0,
+    "protein_g": 6.36
+   },
+   "portions": [
+    {
+     "grams": 2.8,
+     "label": "tsp"
+    },
+    {
+     "grams": 3.0,
+     "label": "clove"
+    },
+    {
+     "grams": 9.0,
+     "label": "cloves"
+    },
+    {
+     "grams": 136.0,
+     "label": "cup"
+    }
+   ],
+   "serving_g": 2.8
+  },
+  "green beans": {
+   "description": "Beans, snap, green, raw",
+   "fdc_id": 169961,
+   "per_100g": {
+    "carb_g": 6.97,
+    "energy_source": "kcal as published",
+    "fat_g": 0.22,
+    "fiber_g": 2.7,
+    "kcal": 31.0,
+    "protein_g": 1.83
+   },
+   "portions": [
+    {
+     "grams": 55.0,
+     "label": "beans (4\" long)"
+    },
+    {
+     "grams": 100.0,
+     "label": "cup 1/2\" pieces"
+    }
+   ],
+   "serving_g": 55.0
+  },
+  "ground beef": {
+   "description": "Beef, ground, 90% lean meat / 10% fat, raw",
+   "fdc_id": 174030,
+   "per_100g": {
+    "carb_g": 0.0,
+    "energy_source": "kcal as published",
+    "fat_g": 10.0,
+    "fiber_g": 0.0,
+    "kcal": 176.0,
+    "protein_g": 20.0
+   },
+   "portions": [
+    {
+     "grams": 113.0,
+     "label": "oz"
+    }
+   ],
+   "serving_g": 113.0
   },
   "kale": {
    "description": "Kale, raw",
@@ -474,6 +709,33 @@
     }
    ],
    "serving_g": 249.0
+  },
+  "mozzarella": {
+   "description": "Cheese, mozzarella, whole milk",
+   "fdc_id": 170845,
+   "per_100g": {
+    "carb_g": 2.4,
+    "energy_source": "kcal as published",
+    "fat_g": 22.14,
+    "fiber_g": 0.0,
+    "kcal": 299.0,
+    "protein_g": 22.17
+   },
+   "portions": [
+    {
+     "grams": 28.35,
+     "label": "oz"
+    },
+    {
+     "grams": 112.0,
+     "label": "cup, shredded"
+    },
+    {
+     "grams": 170.0,
+     "label": "slices"
+    }
+   ],
+   "serving_g": 28.35
   },
   "mushrooms": {
    "description": "Mushrooms, white, raw",
@@ -619,6 +881,37 @@
    ],
    "serving_g": 160.0
   },
+  "orange": {
+   "description": "Oranges, raw, all commercial varieties",
+   "fdc_id": 169097,
+   "per_100g": {
+    "carb_g": 11.75,
+    "energy_source": "kcal as published",
+    "fat_g": 0.12,
+    "fiber_g": 2.4,
+    "kcal": 47.0,
+    "protein_g": 0.94
+   },
+   "portions": [
+    {
+     "grams": 96.0,
+     "label": "small (2-3/8\" dia)"
+    },
+    {
+     "grams": 184.0,
+     "label": "large (3-1/16\" dia)"
+    },
+    {
+     "grams": 180.0,
+     "label": "cup, sections"
+    },
+    {
+     "grams": 131.0,
+     "label": "fruit (2-5/8\" dia)"
+    }
+   ],
+   "serving_g": 96.0
+  },
   "pasta": {
    "description": "Pasta, dry, enriched",
    "fdc_id": 169736,
@@ -679,6 +972,25 @@
    },
    "portions": [],
    "serving_g": null
+  },
+  "peas": {
+   "description": "Peas, green, raw",
+   "fdc_id": 170419,
+   "per_100g": {
+    "carb_g": 14.45,
+    "energy_source": "kcal as published",
+    "fat_g": 0.4,
+    "fiber_g": 5.7,
+    "kcal": 81.0,
+    "protein_g": 5.42
+   },
+   "portions": [
+    {
+     "grams": 145.0,
+     "label": "cup"
+    }
+   ],
+   "serving_g": 145.0
   },
   "peppers": {
    "description": "Peppers, bell, red, raw",
@@ -787,6 +1099,25 @@
    ],
    "serving_g": 115.0
   },
+  "shrimp": {
+   "description": "Crustaceans, shrimp, raw",
+   "fdc_id": 175179,
+   "per_100g": {
+    "carb_g": 0.0,
+    "energy_source": "kcal as published",
+    "fat_g": 0.51,
+    "fiber_g": null,
+    "kcal": 85.0,
+    "protein_g": 20.1
+   },
+   "portions": [
+    {
+     "grams": 85.0,
+     "label": "oz"
+    }
+   ],
+   "serving_g": 85.0
+  },
   "soy sauce": {
    "description": "Soy sauce made from soy and wheat (shoyu)",
    "fdc_id": 174277,
@@ -848,6 +1179,37 @@
     }
    ],
    "serving_g": 340.0
+  },
+  "sweet corn": {
+   "description": "Corn, sweet, yellow, raw",
+   "fdc_id": 169998,
+   "per_100g": {
+    "carb_g": 18.7,
+    "energy_source": "kcal as published",
+    "fat_g": 1.35,
+    "fiber_g": 2.0,
+    "kcal": 86.0,
+    "protein_g": 3.27
+   },
+   "portions": [
+    {
+     "grams": 102.0,
+     "label": "ear, medium (6-3/4\" to 7-1/2\" long) yields"
+    },
+    {
+     "grams": 145.0,
+     "label": "cup"
+    },
+    {
+     "grams": 73.0,
+     "label": "ear, small (5-1/2\" to 6-1/2\" long)"
+    },
+    {
+     "grams": 143.0,
+     "label": "ear, large (7-3/4\" to 9\" long) yields"
+    }
+   ],
+   "serving_g": 102.0
   },
   "sweet potato": {
    "description": "Sweet potatoes, orange flesh, without skin, raw",
@@ -995,6 +1357,52 @@
     }
    ],
    "serving_g": 245.0
+  },
+  "tuna": {
+   "description": "Fish, tuna, light, canned in water, without salt, drained solids",
+   "fdc_id": 171986,
+   "per_100g": {
+    "carb_g": 0.0,
+    "energy_source": "kcal as published",
+    "fat_g": 0.82,
+    "fiber_g": 0.0,
+    "kcal": 116.0,
+    "protein_g": 25.51
+   },
+   "portions": [
+    {
+     "grams": 85.0,
+     "label": "oz"
+    },
+    {
+     "grams": 165.0,
+     "label": "can"
+    }
+   ],
+   "serving_g": 85.0
+  },
+  "turkey breast": {
+   "description": "Turkey, whole, breast, meat only, raw",
+   "fdc_id": 171098,
+   "per_100g": {
+    "carb_g": 0.14,
+    "energy_source": "kcal as published",
+    "fat_g": 1.48,
+    "fiber_g": 0.0,
+    "kcal": 114.0,
+    "protein_g": 23.66
+   },
+   "portions": [
+    {
+     "grams": 1769.0,
+     "label": "breast"
+    },
+    {
+     "grams": 113.0,
+     "label": "oz"
+    }
+   ],
+   "serving_g": 1769.0
   },
   "yoghurt": {
    "description": "Yogurt, plain, whole milk",

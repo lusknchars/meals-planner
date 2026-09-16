@@ -435,6 +435,25 @@ USDA_FDC = {
     'tomato': 170457,          # Tomatoes, red, ripe, raw, year round average
     'tomato sauce': 170054,    # Tomato products, canned, sauce (was: a frozen turnover)
     'black beans': 173734,     # Beans, black, mature seeds, raw
+    # Added with the catalogue's second twenty-five recipes. Each read before
+    # it was written: the bare search offered ground TURKEY for ground beef,
+    # cashews for almonds, and an apple row with no calories at all.
+    'almonds': 170158,         # dry roasted, unsalted -- the raw row has no calories
+    'apple': 167793,           # Apples, raw, fuji, with skin
+    'cauliflower': 169986,
+    'cottage cheese': 172182,
+    'couscous': 169699,
+    'feta': 173420,
+    'garlic': 169230,
+    'green beans': 169961,     # snap beans, the row that once stood in for dry beans
+    'ground beef': 174030,     # 90% lean, RAW   (the search offered Turkey, ground)
+    'mozzarella': 170845,
+    'orange': 169097,
+    'peas': 170419,
+    'shrimp': 175179,
+    'sweet corn': 169998,      # two words: "sweetcorn" appears in no USDA description
+    'tuna': 171986,            # light, canned in water
+    'turkey breast': 171098,   # serving_g is a whole 1.8 kg breast -- grams only, never `un`
 }
 
 

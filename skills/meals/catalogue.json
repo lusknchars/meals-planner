@@ -1,5 +1,7 @@
 {
  "categories": {
+  "almonds": "Pantry",
+  "apple": "Produce",
   "avocado": "Produce",
   "bacon": "Meat & Fish",
   "banana": "Produce",
@@ -9,38 +11,138 @@
   "broccoli": "Produce",
   "butter": "Dairy",
   "carrot": "Produce",
+  "cauliflower": "Produce",
   "cheese": "Dairy",
   "chicken breast": "Meat & Fish",
   "chickpeas": "Pantry",
+  "cottage cheese": "Dairy",
   "courgette": "Produce",
+  "couscous": "Pantry",
   "cucumber": "Produce",
   "eggs": "Dairy",
+  "feta": "Dairy",
+  "garlic": "Produce",
+  "green beans": "Produce",
+  "ground beef": "Meat & Fish",
   "kale": "Produce",
   "lentils": "Pantry",
   "milk": "Dairy",
+  "mozzarella": "Dairy",
   "mushrooms": "Produce",
   "oats": "Pantry",
   "olive oil": "Pantry",
   "onion": "Produce",
+  "orange": "Produce",
   "pasta": "Pantry",
   "peanut butter": "Pantry",
+  "peas": "Produce",
   "peppers": "Produce",
   "potatoes": "Produce",
   "quinoa": "Pantry",
   "rice": "Pantry",
   "salmon fillet": "Meat & Fish",
+  "shrimp": "Meat & Fish",
   "soy sauce": "Pantry",
   "spinach": "Produce",
+  "sweet corn": "Produce",
   "sweet potato": "Produce",
   "tapioca flour": "Pantry",
   "tofu": "Dairy",
   "tomato": "Produce",
   "tomato sauce": "Pantry",
+  "tuna": "Pantry",
+  "turkey breast": "Meat & Fish",
   "yoghurt": "Dairy"
  },
  "currency": "USD",
  "note": "Recipes are generic home cooking. The venues are SAMPLE data placed around one city so the ranking can be demonstrated offline; they are not a real restaurant directory. Point MEALS_CATALOGUE at your own file to use real places.",
  "recipes": [
+  {
+   "calories": 490,
+   "cost": 2.6,
+   "id": "apple-almond-yoghurt",
+   "ingredients": [
+    {
+     "cost": 1.5,
+     "item": "yoghurt",
+     "quantity": 250,
+     "unit": "g"
+    },
+    {
+     "cost": 0.55,
+     "item": "apple",
+     "quantity": 1,
+     "unit": "un"
+    },
+    {
+     "cost": 0.55,
+     "item": "almonds",
+     "quantity": 25,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Yoghurt with apple and almonds"
+  },
+  {
+   "calories": 520,
+   "cost": 1.8,
+   "id": "avocado-toast-egg",
+   "ingredients": [
+    {
+     "cost": 0.5,
+     "item": "bread",
+     "quantity": 2,
+     "unit": "sl"
+    },
+    {
+     "cost": 0.9,
+     "item": "avocado",
+     "quantity": 1,
+     "unit": "un"
+    },
+    {
+     "cost": 0.4,
+     "item": "eggs",
+     "quantity": 1,
+     "unit": "un"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian"
+   ],
+   "title": "Avocado toast with a fried egg"
+  },
+  {
+   "calories": 560,
+   "cost": 2.2,
+   "id": "bacon-eggs",
+   "ingredients": [
+    {
+     "cost": 0.8,
+     "item": "eggs",
+     "quantity": 2,
+     "unit": "un"
+    },
+    {
+     "cost": 1.4,
+     "item": "bacon",
+     "quantity": 60,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Bacon and eggs"
+  },
   {
    "calories": 430,
    "cost": 2.0,
@@ -73,29 +175,35 @@
    "title": "Banana and peanut smoothie"
   },
   {
-   "calories": 560,
-   "cost": 2.2,
-   "id": "bacon-eggs",
+   "calories": 460,
+   "cost": 5.02,
+   "id": "cottage-berries",
    "ingredients": [
     {
-     "cost": 0.8,
-     "item": "eggs",
-     "quantity": 2,
-     "unit": "un"
+     "cost": 2.0,
+     "item": "cottage cheese",
+     "quantity": 250,
+     "unit": "g"
     },
     {
-     "cost": 1.4,
-     "item": "bacon",
-     "quantity": 60,
+     "cost": 2.25,
+     "item": "berries",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 0.77,
+     "item": "almonds",
+     "quantity": 35,
      "unit": "g"
     }
    ],
    "slot": "breakfast",
    "tags": [
-    "meat",
+    "vegetarian",
     "gluten-free"
    ],
-   "title": "Bacon and eggs"
+   "title": "Cottage cheese with berries and almonds"
   },
   {
    "calories": 520,
@@ -159,6 +267,98 @@
    "title": "Oats, yoghurt and berries"
   },
   {
+   "calories": 510,
+   "cost": 3.03,
+   "id": "orange-cottage-bowl",
+   "ingredients": [
+    {
+     "cost": 2.0,
+     "item": "cottage cheese",
+     "quantity": 250,
+     "unit": "g"
+    },
+    {
+     "cost": 0.5,
+     "item": "orange",
+     "quantity": 1,
+     "unit": "un"
+    },
+    {
+     "cost": 0.53,
+     "item": "oats",
+     "quantity": 70,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Cottage cheese with orange and oats"
+  },
+  {
+   "calories": 540,
+   "cost": 1.37,
+   "id": "peanut-banana-oats",
+   "ingredients": [
+    {
+     "cost": 0.56,
+     "item": "oats",
+     "quantity": 75,
+     "unit": "g"
+    },
+    {
+     "cost": 0.35,
+     "item": "banana",
+     "quantity": 1,
+     "unit": "un"
+    },
+    {
+     "cost": 0.46,
+     "item": "peanut butter",
+     "quantity": 25,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Oats with banana and peanut butter"
+  },
+  {
+   "calories": 440,
+   "cost": 1.4,
+   "id": "peanut-banana-toast",
+   "ingredients": [
+    {
+     "cost": 0.5,
+     "item": "bread",
+     "quantity": 2,
+     "unit": "sl"
+    },
+    {
+     "cost": 0.55,
+     "item": "peanut butter",
+     "quantity": 30,
+     "unit": "g"
+    },
+    {
+     "cost": 0.35,
+     "item": "banana",
+     "quantity": 1,
+     "unit": "un"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian"
+   ],
+   "title": "Peanut butter and banana on toast"
+  },
+  {
    "calories": 450,
    "cost": 2.0,
    "id": "tapioca-cheese",
@@ -182,6 +382,135 @@
     "gluten-free"
    ],
    "title": "Tapioca with cheese"
+  },
+  {
+   "calories": 440,
+   "cost": 3.8,
+   "id": "tomato-feta-eggs",
+   "ingredients": [
+    {
+     "cost": 1.2,
+     "item": "eggs",
+     "quantity": 3,
+     "unit": "un"
+    },
+    {
+     "cost": 1.2,
+     "item": "tomato",
+     "quantity": 200,
+     "unit": "g"
+    },
+    {
+     "cost": 1.4,
+     "item": "feta",
+     "quantity": 70,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Baked eggs with tomato and feta"
+  },
+  {
+   "calories": 480,
+   "cost": 5.15,
+   "id": "turkey-egg-scramble",
+   "ingredients": [
+    {
+     "cost": 0.8,
+     "item": "eggs",
+     "quantity": 2,
+     "unit": "un"
+    },
+    {
+     "cost": 0.6,
+     "item": "potatoes",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 0.77,
+     "item": "spinach",
+     "quantity": 90,
+     "unit": "g"
+    },
+    {
+     "cost": 2.98,
+     "item": "turkey breast",
+     "quantity": 175,
+     "unit": "g"
+    }
+   ],
+   "slot": "breakfast",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Turkey and egg scramble with potatoes"
+  },
+  {
+   "calories": 700,
+   "cost": 4.14,
+   "id": "beef-pasta",
+   "ingredients": [
+    {
+     "cost": 2.43,
+     "item": "ground beef",
+     "quantity": 135,
+     "unit": "g"
+    },
+    {
+     "cost": 0.94,
+     "item": "pasta",
+     "quantity": 115,
+     "unit": "g"
+    },
+    {
+     "cost": 0.77,
+     "item": "tomato sauce",
+     "quantity": 135,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "meat"
+   ],
+   "title": "Beef and tomato pasta"
+  },
+  {
+   "calories": 670,
+   "cost": 5.81,
+   "id": "chicken-quinoa-bowl",
+   "ingredients": [
+    {
+     "cost": 3.11,
+     "item": "chicken breast",
+     "quantity": 200,
+     "unit": "g"
+    },
+    {
+     "cost": 1.93,
+     "item": "quinoa",
+     "quantity": 110,
+     "unit": "g"
+    },
+    {
+     "cost": 0.77,
+     "item": "peppers",
+     "quantity": 110,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Chicken and quinoa bowl with peppers"
   },
   {
    "calories": 720,
@@ -252,6 +581,43 @@
    "title": "Chickpea salad"
   },
   {
+   "calories": 680,
+   "cost": 2.59,
+   "id": "feta-chickpea-salad",
+   "ingredients": [
+    {
+     "cost": 1.08,
+     "item": "chickpeas",
+     "quantity": 125,
+     "unit": "g"
+    },
+    {
+     "cost": 0.8,
+     "item": "feta",
+     "quantity": 40,
+     "unit": "g"
+    },
+    {
+     "cost": 0.51,
+     "item": "tomato",
+     "quantity": 85,
+     "unit": "g"
+    },
+    {
+     "cost": 0.2,
+     "item": "olive oil",
+     "quantity": 10,
+     "unit": "ml"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Chickpea and feta salad"
+  },
+  {
    "calories": 650,
    "cost": 2.5,
    "id": "lentil-bowl",
@@ -281,6 +647,73 @@
     "gluten-free"
    ],
    "title": "Lentils, rice and greens"
+  },
+  {
+   "calories": 680,
+   "cost": 3.31,
+   "id": "lentil-cauliflower-curry",
+   "ingredients": [
+    {
+     "cost": 1.75,
+     "item": "lentils",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 1.26,
+     "item": "cauliflower",
+     "quantity": 210,
+     "unit": "g"
+    },
+    {
+     "cost": 0.1,
+     "item": "garlic",
+     "quantity": 8,
+     "unit": "g"
+    },
+    {
+     "cost": 0.2,
+     "item": "olive oil",
+     "quantity": 10,
+     "unit": "ml"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Lentil and cauliflower curry"
+  },
+  {
+   "calories": 680,
+   "cost": 3.05,
+   "id": "mozzarella-tomato-pasta",
+   "ingredients": [
+    {
+     "cost": 0.98,
+     "item": "pasta",
+     "quantity": 120,
+     "unit": "g"
+    },
+    {
+     "cost": 1.26,
+     "item": "mozzarella",
+     "quantity": 70,
+     "unit": "g"
+    },
+    {
+     "cost": 0.81,
+     "item": "tomato",
+     "quantity": 135,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "vegetarian"
+   ],
+   "title": "Pasta with mozzarella and tomato"
   },
   {
    "calories": 700,
@@ -321,6 +754,98 @@
   },
   {
    "calories": 680,
+   "cost": 7.29,
+   "id": "shrimp-rice-peas",
+   "ingredients": [
+    {
+     "cost": 5.76,
+     "item": "shrimp",
+     "quantity": 180,
+     "unit": "g"
+    },
+    {
+     "cost": 0.8,
+     "item": "rice",
+     "quantity": 120,
+     "unit": "g"
+    },
+    {
+     "cost": 0.73,
+     "item": "peas",
+     "quantity": 105,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "fish",
+    "gluten-free"
+   ],
+   "title": "Prawns with rice and peas"
+  },
+  {
+   "calories": 630,
+   "cost": 3.69,
+   "id": "tuna-couscous",
+   "ingredients": [
+    {
+     "cost": 1.96,
+     "item": "tuna",
+     "quantity": 140,
+     "unit": "g"
+    },
+    {
+     "cost": 1.08,
+     "item": "couscous",
+     "quantity": 120,
+     "unit": "g"
+    },
+    {
+     "cost": 0.65,
+     "item": "cucumber",
+     "quantity": 130,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "fish"
+   ],
+   "title": "Tuna and couscous salad"
+  },
+  {
+   "calories": 690,
+   "cost": 4.9,
+   "id": "turkey-greenbean-rice",
+   "ingredients": [
+    {
+     "cost": 3.15,
+     "item": "turkey breast",
+     "quantity": 185,
+     "unit": "g"
+    },
+    {
+     "cost": 0.8,
+     "item": "rice",
+     "quantity": 120,
+     "unit": "g"
+    },
+    {
+     "cost": 0.95,
+     "item": "green beans",
+     "quantity": 135,
+     "unit": "g"
+    }
+   ],
+   "slot": "lunch",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Turkey with rice and green beans"
+  },
+  {
+   "calories": 680,
    "cost": 2.3,
    "id": "veggie-pasta",
    "ingredients": [
@@ -348,6 +873,37 @@
     "vegetarian"
    ],
    "title": "Pasta with tomato and courgette"
+  },
+  {
+   "calories": 640,
+   "cost": 5.17,
+   "id": "beef-potato-peas",
+   "ingredients": [
+    {
+     "cost": 3.06,
+     "item": "ground beef",
+     "quantity": 170,
+     "unit": "g"
+    },
+    {
+     "cost": 1.2,
+     "item": "potatoes",
+     "quantity": 300,
+     "unit": "g"
+    },
+    {
+     "cost": 0.91,
+     "item": "peas",
+     "quantity": 130,
+     "unit": "g"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Beef with potatoes and peas"
   },
   {
    "calories": 640,
@@ -387,6 +943,117 @@
    "title": "Black bean soup"
   },
   {
+   "calories": 730,
+   "cost": 2.56,
+   "id": "blackbean-corn-bowl",
+   "ingredients": [
+    {
+     "cost": 0.79,
+     "item": "black beans",
+     "quantity": 105,
+     "unit": "g"
+    },
+    {
+     "cost": 0.45,
+     "item": "sweet corn",
+     "quantity": 75,
+     "unit": "g"
+    },
+    {
+     "cost": 0.42,
+     "item": "peppers",
+     "quantity": 60,
+     "unit": "g"
+    },
+    {
+     "cost": 0.9,
+     "item": "avocado",
+     "quantity": 1,
+     "unit": "un"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Black bean and sweet corn bowl"
+  },
+  {
+   "calories": 730,
+   "cost": 3.19,
+   "id": "chickpea-spinach-stew",
+   "ingredients": [
+    {
+     "cost": 1.52,
+     "item": "chickpeas",
+     "quantity": 175,
+     "unit": "g"
+    },
+    {
+     "cost": 0.81,
+     "item": "spinach",
+     "quantity": 95,
+     "unit": "g"
+    },
+    {
+     "cost": 0.79,
+     "item": "tomato sauce",
+     "quantity": 140,
+     "unit": "g"
+    },
+    {
+     "cost": 0.07,
+     "item": "garlic",
+     "quantity": 6,
+     "unit": "g"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Chickpea and spinach stew"
+  },
+  {
+   "calories": 720,
+   "cost": 4.8,
+   "id": "courgette-mozzarella-bake",
+   "ingredients": [
+    {
+     "cost": 1.38,
+     "item": "courgette",
+     "quantity": 250,
+     "unit": "g"
+    },
+    {
+     "cost": 1.62,
+     "item": "mozzarella",
+     "quantity": 90,
+     "unit": "g"
+    },
+    {
+     "cost": 0.67,
+     "item": "rice",
+     "quantity": 100,
+     "unit": "g"
+    },
+    {
+     "cost": 1.13,
+     "item": "tomato sauce",
+     "quantity": 200,
+     "unit": "g"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian",
+    "gluten-free"
+   ],
+   "title": "Courgette, mozzarella and rice bake"
+  },
+  {
    "calories": 780,
    "cost": 6.8,
    "id": "salmon-greens",
@@ -418,6 +1085,79 @@
    "title": "Salmon, potatoes and spinach"
   },
   {
+   "calories": 690,
+   "cost": 9.39,
+   "id": "salmon-sweetcorn",
+   "ingredients": [
+    {
+     "cost": 1.01,
+     "item": "broccoli",
+     "quantity": 135,
+     "unit": "g"
+    },
+    {
+     "cost": 0.6,
+     "item": "potatoes",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 6.88,
+     "item": "salmon fillet",
+     "quantity": 200,
+     "unit": "g"
+    },
+    {
+     "cost": 0.9,
+     "item": "sweet corn",
+     "quantity": 150,
+     "unit": "g"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "fish",
+    "gluten-free"
+   ],
+   "title": "Salmon with sweet corn, broccoli and potatoes"
+  },
+  {
+   "calories": 700,
+   "cost": 7.14,
+   "id": "shrimp-garlic-couscous",
+   "ingredients": [
+    {
+     "cost": 5.76,
+     "item": "shrimp",
+     "quantity": 180,
+     "unit": "g"
+    },
+    {
+     "cost": 1.08,
+     "item": "couscous",
+     "quantity": 120,
+     "unit": "g"
+    },
+    {
+     "cost": 0.1,
+     "item": "garlic",
+     "quantity": 8,
+     "unit": "g"
+    },
+    {
+     "cost": 0.2,
+     "item": "olive oil",
+     "quantity": 10,
+     "unit": "ml"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "fish"
+   ],
+   "title": "Garlic prawns with couscous"
+  },
+  {
    "calories": 700,
    "cost": 3.5,
    "id": "sweet-potato-bowl",
@@ -447,6 +1187,42 @@
     "gluten-free"
    ],
    "title": "Sweet potato and quinoa bowl"
+  },
+  {
+   "calories": 730,
+   "cost": 4.55,
+   "id": "tofu-cauliflower-rice",
+   "ingredients": [
+    {
+     "cost": 2.64,
+     "item": "tofu",
+     "quantity": 220,
+     "unit": "g"
+    },
+    {
+     "cost": 1.11,
+     "item": "cauliflower",
+     "quantity": 185,
+     "unit": "g"
+    },
+    {
+     "cost": 0.67,
+     "item": "rice",
+     "quantity": 100,
+     "unit": "g"
+    },
+    {
+     "cost": 0.13,
+     "item": "soy sauce",
+     "quantity": 10,
+     "unit": "ml"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "vegetarian"
+   ],
+   "title": "Tofu and cauliflower with rice"
   },
   {
    "calories": 690,
@@ -483,6 +1259,80 @@
     "vegetarian"
    ],
    "title": "Tofu stir fry"
+  },
+  {
+   "calories": 530,
+   "cost": 4.41,
+   "id": "tuna-potato-salad",
+   "ingredients": [
+    {
+     "cost": 1.96,
+     "item": "tuna",
+     "quantity": 140,
+     "unit": "g"
+    },
+    {
+     "cost": 1.2,
+     "item": "potatoes",
+     "quantity": 300,
+     "unit": "g"
+    },
+    {
+     "cost": 1.05,
+     "item": "green beans",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 0.2,
+     "item": "olive oil",
+     "quantity": 10,
+     "unit": "ml"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "fish",
+    "gluten-free"
+   ],
+   "title": "Tuna and potato salad with green beans"
+  },
+  {
+   "calories": 600,
+   "cost": 6.09,
+   "id": "turkey-sweet-potato",
+   "ingredients": [
+    {
+     "cost": 1.05,
+     "item": "green beans",
+     "quantity": 150,
+     "unit": "g"
+    },
+    {
+     "cost": 0.2,
+     "item": "olive oil",
+     "quantity": 10,
+     "unit": "ml"
+    },
+    {
+     "cost": 1.44,
+     "item": "sweet potato",
+     "quantity": 300,
+     "unit": "g"
+    },
+    {
+     "cost": 3.4,
+     "item": "turkey breast",
+     "quantity": 200,
+     "unit": "g"
+    }
+   ],
+   "slot": "dinner",
+   "tags": [
+    "meat",
+    "gluten-free"
+   ],
+   "title": "Roast turkey with sweet potato and green beans"
   },
   {
    "calories": 620,
