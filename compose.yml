@@ -1,0 +1,19 @@
+services:
+  agent:
+    build: .
+    image: meals-planner-agent:local
+    platform: linux/amd64
+    environment:
+      AGENT_ID: meals-planner
+    volumes:
+      - type: bind
+        source: ./plow-credentials
+        target: /var/lib/plow/credentials.host
+        read_only: true
+        bind:
+          create_host_path: false
+      - agent-home:/var/lib/hermes
+    restart: unless-stopped
+    stop_grace_period: 35s
+volumes:
+  agent-home:

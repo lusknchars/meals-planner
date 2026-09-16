@@ -1,0 +1,67 @@
+---
+name: meals
+description: Plan a week of meals inside a budget and a calorie target, build one shopping list, draft an order from places nearby, and record what was actually eaten. Use when someone asks what to eat, wants a plan or shopping list, wants food ordered, or reports a meal.
+---
+
+# Meals
+
+Use `python3 /opt/hermes/skills/meals/scripts/meals.py --help` for commands. The
+script persists everything in this installation's Hermes home. Its JSON output is
+the receipt: if the command fails, nothing was saved, and you say so.
+
+Pass `--scope <conversation-id>` on every command, taking the ID from the current
+trusted Plow conversation. If it is unavailable, ask for setup rather than
+inventing an ID or reusing another room. This keeps one household's food out of
+another's.
+
+## Before planning
+
+`profile set` needs at least `--people` and `--calories`. Ask for what is missing
+rather than assuming: how many people eat, the daily calorie target per person,
+the budget for the period, any diet restrictions as comma separated tags such as
+`vegetarian,gluten-free`, and `--lat`/`--lon` if they want ordering. Restrictions
+are exclusions the catalogue must satisfy, so a wrong tag silently narrows every
+plan; read them back once when they are set.
+
+## Planning a week
+
+1. `plan --days 7 --start YYYY-MM-DD` returns each day's meals with calories and
+   cost, the week's total and whether it passes the budget.
+2. Running it again for the same start returns the saved week rather than a new
+   one. Say that it is the existing plan, not a fresh idea.
+3. `shopping --start YYYY-MM-DD` aggregates that plan into one list, multiplied
+   by the number of people.
+4. Report the per-day calories against the target and the total against the
+   budget. When `over_budget` is true, say so plainly and offer to replan with
+   cheaper recipes rather than hiding it.
+
+Calories and prices come from the catalogue shipped with this skill. They are
+reference figures for planning, not a measurement of what someone cooks, and
+never a nutritional or medical assessment.
+
+## Ordering
+
+`order --slot dinner [--craving pizza] [--max-distance-km 5]` ranks venues by
+price, distance and how the meal fits the calories left for that day, and saves a
+draft with a link.
+
+**You never place an order.** The draft is a proposal: give the venue, the item,
+the price, the distance and the link, and let the person confirm. Only after they
+say yes, run `order confirm <id>`, which records the meal against that day.
+
+The venues in the shipped catalogue are sample data around one city, marked
+`sample`. When an option comes from sample data, say so in the same message
+rather than presenting it as a real nearby restaurant. Real venues arrive by
+pointing `MEALS_CATALOGUE` at the owner's own file.
+
+## Tracking
+
+- `log --title "..." --calories N [--date YYYY-MM-DD]` records something eaten.
+  Ask for the calories if the person does not give them; do not estimate silently.
+- `today [--date]` returns the target, what has been eaten and what is left.
+  `over_target` means the day went past the target, which is information, not a
+  verdict on the person.
+
+Resolve relative dates such as "tomorrow" against the person's confirmed date,
+and ask when it is ambiguous. Reply in the person's language, keep it short, and
+show the saved IDs.
