@@ -52,10 +52,12 @@ PRICES = {
     'location_id': '70100123',
     'items': {
         'oats': [
-            {'product_id': 'p1', 'description': 'Kroger Rolled Oats', 'size': '32 oz',
-             'price': 4.49, 'promo': None, 'unit_price': 4.95, 'unit': 'kg', 'image': None},
-            {'product_id': 'p2', 'description': 'Organic Steel Cut Oats', 'size': '24 oz',
-             'price': 7.99, 'promo': None, 'unit_price': 11.74, 'unit': 'kg', 'image': None},
+            {'product_id': 'p1', 'description': 'Kroger Rolled Oats', 'brand': 'Kroger',
+             'size': '32 oz', 'price': 4.49, 'promo': None, 'unit_price': 4.95,
+             'unit': 'kg', 'image': None},
+            {'product_id': 'p2', 'description': 'Organic Steel Cut Oats',
+             'brand': 'Simple Truth', 'size': '24 oz', 'price': 7.99, 'promo': None,
+             'unit_price': 11.74, 'unit': 'kg', 'image': None},
         ],
         'rice': [
             {'product_id': 'p3', 'description': 'Long Grain Rice', 'size': 'family pack',
@@ -139,7 +141,18 @@ class SnapshotAware(unittest.TestCase):
         self.assertEqual(oats['cost'], 0.49)
         self.assertEqual(oats['price_source'], 'kroger:70100123 2026-09-16')
         self.assertEqual(oats['product'], 'Kroger Rolled Oats')
+        self.assertEqual(oats['brand'], 'Kroger')
         self.assertEqual(oats['value'], 'best value')
+
+    def test_a_line_without_a_brand_says_nothing_rather_than_none(self):
+        self.profile()
+        self.call('plan', '--days', '1', '--start', '2026-09-16')
+        shopping = self.call('shopping', '--start', '2026-09-16')
+        # beans' fixture row carries no brand: the key exists and is null, never
+        # the string "None" leaking into a message someone reads on a phone.
+        beans = {item['item']: item for item in shopping['items']}['beans']
+        self.assertIn('brand', beans)
+        self.assertIsNone(beans['brand'])
 
     def test_unparseable_size_keeps_the_estimate_and_admits_it(self):
         self.profile()

@@ -34,6 +34,11 @@ plan; read them back once when they are set.
 4. Report the per-day calories against the target and the total against the
    budget. When `over_budget` is true, say so plainly and offer to replan with
    cheaper recipes rather than hiding it.
+5. Name the product when a line came from a store: the brand and what it is, as
+   in "Kroger Plain Low Fat Yogurt, $2.99 for 32 oz". `brand` is null for about
+   one row in eight, so say the description alone then — never the word "None".
+   A line whose `price_source` is `catalogue estimate` has no product to name;
+   call it an estimate instead of dressing it up.
 
 Calories and prices come from the catalogue shipped with this skill. They are
 reference figures for planning, not a measurement of what someone cooks, and

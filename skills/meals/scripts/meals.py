@@ -316,11 +316,12 @@ def shopping(db, scope, args):
         cost, product, value, package = priced(
             held['quantity'], held['unit'], (prices or {}).get('items', {}).get(held['item']))
         if cost is None:
-            held.update(cost=estimate, estimate=estimate, product=None, value=None,
-                        price_source='catalogue estimate', package_price=package,
-                        promo=None, image=None)
+            held.update(cost=estimate, estimate=estimate, product=None, brand=None,
+                        value=None, price_source='catalogue estimate',
+                        package_price=package, promo=None, image=None)
             continue
-        held.update(cost=cost, estimate=estimate, product=product['description'], value=value,
+        held.update(cost=cost, estimate=estimate, product=product['description'],
+                    brand=product.get('brand'), value=value,
                     price_source=f"kroger:{prices['location_id']} {stamp}",
                     package_price=product.get('price'), promo=product.get('promo'),
                     image=product.get('image'))
