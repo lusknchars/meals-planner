@@ -1,0 +1,94 @@
+#!/bin/sh
+# Report this agent's token usage to the Agent Index, every 5 minutes.
+#
+# NO SWITCH. The reporter is here because somebody put it in this image, and
+# that is the decision: an agent whose owner does not want their usage on the
+# index is one built without this service. A flag would re-ask a question the
+# Dockerfile has already answered, in a second place that can disagree with it.
+#
+# Baked in rather than bind-mounted: a mount whose source is missing does not
+# fail, it creates a DIRECTORY at the target, and the reporter starts against a
+# directory and reports nothing. Built in, the file is in the image or the
+# build failed.
+
+# Absolute, for the same reason the calendar feed's is: a service inherits the
+# supervision tree's PATH, not a login shell's.
+PATH=/command:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+export PATH
+
+# Written by first boot from the credential the host dropped in, 0600 root --
+# read here, before dropping to the agent's uid. AGENT_ID is which agent this
+# is; without it there is nothing to report FOR, so the service stands down
+# rather than guessing a name.
+PLOW_AGENT_TOKEN=$(cat /run/s6/container_environment/PLOW_AGENT_TOKEN 2>/dev/null || true)
+AGENT_ID=$(cat /run/s6/container_environment/AGENT_ID 2>/dev/null || true)
+export AGENT_ID
+
+# The agent's home is where its usage store lives, and the client keeps its
+# ledger beside that store. Fixed, not overridable: this image puts the home
+# there, and a second way to say where it is only creates the case where the
+# reporter and the agent disagree about which store is theirs.
+HERMES_HOME=/var/lib/hermes
+export HERMES_HOME
+
+if [ -z "$AGENT_ID" ]; then
+  echo "agent-index: no AGENT_ID in this container's environment, so there is no" >&2
+  echo "agent to report for -- standing down. Set it where this container is" >&2
+  echo "started (plow-agents compose.yml)." >&2
+  exec sleep 86400
+fi
+
+while :; do
+  # The pinned client owns assertion exchange, aik_ format and atomic storage.
+  # The image only invokes it; no image-owned HTTP path can hand the broad Plow
+  # bearer to the Index.
+  # Registered already? The client owns that question. Where this install's
+  # state lives is its business, and it MOVES it -- this gate used to test
+  # $HERMES_HOME/.agent-index/token, a path the client only ever DELETES once
+  # its own state file holds the key. The test was true forever, so every tenant
+  # re-registered on the hour and minted a fresh key each time.
+  #
+  #   0  registered      3  not registered      2  state is there, unreadable
+  #
+  # 2 is not 3, and this must not collapse them: registering over state the
+  # client could not read mints against a new install id and strands the usage
+  # this install has already published. That pass is skipped instead. The
+  # contract and why it has three answers are in the client's README.
+  #
+  # stdout is dropped -- it says the same thing every pass. stderr is not: on 2
+  # it carries the client's account of WHICH file it could not read.
+  /command/s6-setuidgid hermes \
+    env HOME="$HERMES_HOME" HERMES_HOME="$HERMES_HOME" \
+    /opt/hermes/.venv/bin/python3 /opt/plow/agent-index-client.py status >/dev/null
+  case $? in
+    0) ;;
+    3)
+      /command/s6-setuidgid hermes \
+        env HOME="$HERMES_HOME" HERMES_HOME="$HERMES_HOME" AGENT_ID="$AGENT_ID" PLOW_AGENT_TOKEN="$PLOW_AGENT_TOKEN" \
+        /opt/hermes/.venv/bin/python3 /opt/plow/agent-index-client.py \
+        --register --agent "$AGENT_ID" >/dev/null || {
+      echo "agent-index: no index key this pass, not reporting" >&2
+      /bin/sleep 300
+      continue
+      }
+      ;;
+    *)
+      echo "agent-index: the client could not read this install's state (above);" >&2
+      echo "standing off rather than registering over it." >&2
+      /bin/sleep 300
+      continue
+      ;;
+  esac
+
+  # No PLOW_AGENT_TOKEN in this environment. The client finds the key the
+  # exchange stored in the agent's home and reports with that.
+  #
+  # Never fatal. A collector that failed says so and exits non-zero; a crashing
+  # longrun would be respawned in a tight loop, which turns one bad pass into a
+  # hot loop against the index.
+  /command/s6-setuidgid hermes \
+    env HOME="$HERMES_HOME" HERMES_HOME="$HERMES_HOME" AGENT_ID="$AGENT_ID" \
+    /opt/hermes/.venv/bin/python3 /opt/plow/agent-index-client.py \
+    || echo "agent-index: reporter exited non-zero, see the line above" >&2
+  /bin/sleep 300
+done

@@ -1,0 +1,14 @@
+*
+!Dockerfile
+!LICENSE
+!NOTICE
+!runtime/
+!runtime/**
+!skills/
+!skills/**
+!vendor/
+!vendor/**
+!image/
+!image/**
+**/__pycache__
+**/*.pyc
