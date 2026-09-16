@@ -243,11 +243,19 @@ def kroger_locations(fetch, token, zip_code, limit=5):
     for row in _json(status, raw, 'Kroger locations').get('data', []):
         address = row.get('address') or {}
         point = row.get('geolocation') or {}
+        hours = row.get('hours') or {}
         found.append({'location_id': row.get('locationId'), 'name': row.get('name'),
                       'chain': row.get('chain'),
                       'address': address.get('addressLine1'), 'city': address.get('city'),
                       'state': address.get('state'), 'zip': address.get('zipCode'),
-                      'lat': point.get('latitude'), 'lon': point.get('longitude')})
+                      'lat': point.get('latitude'), 'lon': point.get('longitude'),
+                      # Somebody driving to collect a shopping list needs to know
+                      # whether it is open and how to ring ahead. compare.py has
+                      # carried these since it was written; this path had not.
+                      'phone': row.get('phone'), 'timezone': hours.get('timezone'),
+                      'hours': {day: hours[day] for day in
+                                ('monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+                                 'saturday', 'sunday') if isinstance(hours.get(day), dict)}})
     return found
 
 
@@ -803,16 +811,24 @@ def main(argv=None):
             return 0
 
         client_id, client_secret = credentials(args.env)
+        token = kroger_token(http, client_id, client_secret)
+        # The store is looked up whichever way the id arrived. A snapshot that
+        # knows only a location id can price a basket at a shop it cannot name,
+        # place on a map, or say the closing time of -- which is most of what
+        # somebody collecting the shopping actually needs.
+        nearby = kroger_locations(http, token, args.zip_code, limit=25)
         location_id = args.location_id
         if not location_id:
-            token = kroger_token(http, client_id, client_secret)
-            found = kroger_locations(http, token, args.zip_code)
-            if not found:
+            if not nearby:
                 raise ValueError(f'no Kroger-family store near {args.zip_code}')
-            location_id = found[0]['location_id']
-            print(f"using {found[0]['name']} ({location_id})")
+            location_id = nearby[0]['location_id']
+            print(f"using {nearby[0]['name']} ({location_id})")
+        store = next((row for row in nearby if row['location_id'] == location_id), None)
         terms = catalogue_terms(args.catalogue)
         snapshot = fetch_prices(http, client_id, client_secret, location_id, terms)
+        # None when --location-id names a store outside this postcode's results:
+        # an admitted gap, not a store record invented to fill the field.
+        snapshot['store'] = store
         # Whose shops these are. Kroger prices US stores, and a reader elsewhere
         # needs to be told that rather than shown a number about the wrong country.
         snapshot['country'] = 'US'

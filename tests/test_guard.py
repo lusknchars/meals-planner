@@ -161,5 +161,35 @@ class Registration(unittest.TestCase):
             ['post_tool_call', 'transform_llm_output', 'on_session_end', 'on_session_reset']))
 
 
+class Dashes(unittest.TestCase):
+    """A dash used as a separator is punctuation nobody texts.
+
+    Asked three times to stop, the model kept sending "1,830 kcal - $11.91".
+    Wording had its chance; this is the rule as code. It has to be narrow: a
+    hyphen inside a word is part of the word.
+    """
+
+    def test_a_separator_dash_becomes_a_comma(self):
+        self.assertEqual(guard.tidy('1,830 kcal - $11.91'), '1,830 kcal, $11.91')
+
+    def test_an_em_dash_separator_goes_too(self):
+        self.assertEqual(guard.tidy('beef pasta — 700 kcal'), 'beef pasta, 700 kcal')
+
+    def test_a_hyphenated_word_is_left_alone(self):
+        for word in ('gluten-free', 'sugar-free', 'long-grain', 'low-fat'):
+            self.assertIn(word, guard.tidy(f'a {word} dish'), word)
+
+    def test_it_never_welds_two_lines_together(self):
+        text = '\U0001f4c5 Mon\n\U0001f34f Yoghurt\n\U0001f35d Beef pasta'
+        self.assertEqual(guard.tidy(text), text, 'newlines are not separators to collapse')
+
+    def test_a_bulleted_line_is_still_stripped_not_commafied(self):
+        self.assertEqual(guard.tidy('\U0001f6d2 Shopping\n- avocado 4\n- banana 8'),
+                         '\U0001f6d2 Shopping\navocado 4\nbanana 8')
+
+    def test_a_reply_needing_no_tidying_is_left_unchanged(self):
+        self.assertIsNone(guard.review('\U0001f4c5 Mon 1,830 kcal, $11.91', {'11.91'}))
+
+
 if __name__ == '__main__':
     unittest.main()

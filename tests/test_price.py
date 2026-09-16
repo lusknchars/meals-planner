@@ -130,10 +130,6 @@ class Caching(unittest.TestCase):
         self.assertFalse(other['cached'], 'another store is another price')
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class WithoutAHome(unittest.TestCase):
     """HERMES_HOME names the installation whose cache these answers belong in.
 
@@ -157,3 +153,7 @@ class WithoutAHome(unittest.TestCase):
             found = price.price_item(Recorder([(200, TOKEN), (200, MILK)]), 'id', 'secret',
                                      '70300022', 'milk', home=Path(home))
             self.assertIsNotNone(found['best'])
+
+
+if __name__ == '__main__':
+    unittest.main()

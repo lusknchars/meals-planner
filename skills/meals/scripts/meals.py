@@ -428,6 +428,11 @@ def currency_for(country):
 # The order a shop is walked, not the order the alphabet falls in. "Other" is
 # last and always exists: an ingredient nobody categorised still has to be bought.
 SLOT_EMOJI = {'breakfast': '🍳', 'lunch': '🥗', 'dinner': '🍽️'}
+# Said the same way every time, because the honest answer to "what is delivery"
+# does not vary: nothing this agent can read publishes a fee.
+DELIVERY_NOTE = ('no delivery price: the store data carries prices and opening '
+                 'hours, not delivery fees. Collection details are above; for a '
+                 'delivery charge, check the shop\'s own app.')
 SECTION_ORDER = ('Produce', 'Bakery', 'Meat & Fish', 'Dairy', 'Pantry', 'Frozen', 'Other')
 # One per section, so a list scans at a glance on a phone. Kept here rather than
 # left to the model: the same food should not be a different symbol each week.
@@ -555,6 +560,49 @@ def stores(db, scope, args):
     limit = int(positive(args.limit, 'limit')) if args.limit else 10
     return {'stores': found[:limit], 'source': data.get('source'),
             'licence': data.get('licence'), 'captured': data.get('captured')}
+
+
+DAY_NAMES = ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+
+
+def pickup(db, scope, args):
+    """Where the shopping is, how far, and when it shuts.
+
+    Reads the store record saved beside this conversation's prices. Offline like
+    everything else here: the distance is arithmetic on two saved points.
+
+    It says nothing about what delivery costs, because nothing it can read
+    publishes that. Kroger's product API carries prices and stores, not
+    fulfilment fees, and a delivery charge guessed at is exactly the kind of
+    number this agent must never give.
+    """
+    profile = read_profile(db, scope)
+    prices = prices_snapshot(profile['store_location_id'])
+    if not prices:
+        raise ValueError('no price snapshot for this conversation\'s store yet: '
+                         'find one with compare.py and save it with profile set --store')
+    store = prices.get('store')
+    if not store:
+        return {'store': None, 'location_id': prices.get('location_id'),
+                'note': 'this snapshot predates store details; rebuild it with refresh.py '
+                        'prices to get the address, hours and distance',
+                'delivery': DELIVERY_NOTE}
+    away = None
+    if profile['lat'] is not None and profile['lon'] is not None \
+            and store.get('lat') is not None and store.get('lon') is not None:
+        away = round(haversine_km(profile['lat'], profile['lon'],
+                                  store['lat'], store['lon']), 2)
+    today_name = DAY_NAMES[dt.date.today().weekday()]
+    hours = (store.get('hours') or {}).get(today_name)
+    return {'store': {key: store.get(key) for key in
+                      ('name', 'chain', 'address', 'city', 'state', 'zip', 'phone')},
+            'location_id': prices.get('location_id'),
+            'distance_km': away,
+            # None means they have not said where they are, not that it is close.
+            'distance_note': None if away is not None else
+            'give a postcode and I can say how far that is',
+            'open_today': hours, 'day': today_name, 'timezone': store.get('timezone'),
+            'captured': prices.get('captured'), 'delivery': DELIVERY_NOTE}
 
 
 def read_profile(db, scope):
@@ -946,6 +994,7 @@ def parser():
     shops = sub.add_parser('stores', help='supermarkets near you, from the snapshot')
     shops.add_argument('--limit', type=int)
 
+    sub.add_parser('pickup', help='where the shopping is, how far, and when it shuts')
     said = sub.add_parser('override', help='a price the person confirmed themselves')
     said.add_argument('action', choices=['set', 'list', 'clear'])
     said.add_argument('--item')
@@ -983,7 +1032,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     handlers = {'plan': plan, 'shopping': shopping, 'order': order, 'log': log, 'today': today,
                 'stores': stores, 'override': override_command, 'targets': targets,
-                'facts': facts}
+                'facts': facts, 'pickup': pickup}
     try:
         scope = text(args.scope, 'scope', 200)
         db = connect()

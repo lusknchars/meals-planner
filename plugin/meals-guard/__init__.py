@@ -65,6 +65,12 @@ _NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")
 # to somebody's phone; the escapes send a literal backslash.
 _BULLET = re.compile(r"^[ \t]*[-*\u2022]\s+", re.MULTILINE)
 _ESCAPED = re.compile(r"\\([-~*_`.!#()\[\]])")
+# A dash used as a separator -- "1,830 kcal - $11.91" -- reads as punctuation
+# nobody would type into a text message. Only a dash with space on BOTH sides
+# qualifies, so "gluten-free" and "sugar-free" survive untouched, and the class
+# is [ \t] rather than \s so this can never reach across a newline and weld two
+# lines into one.
+_SPACED_DASH = re.compile(r"[ \t]+[-\u2010-\u2015][ \t]+")
 
 # Distinctive enough that none is an ordinary English word, so one hit is enough.
 _PORTUGUESE = (
@@ -132,7 +138,8 @@ def is_price_command(tool_name: str, args: Any) -> bool:
 
 def tidy(text: str) -> str:
     """Strip what reaches the reader as punctuation nobody typed."""
-    return _ESCAPED.sub(r"\1", _BULLET.sub("", text or ""))
+    without_bullets = _BULLET.sub("", text or "")
+    return _SPACED_DASH.sub(", ", _ESCAPED.sub(r"\1", without_bullets))
 
 
 def looks_portuguese(text: str) -> bool:

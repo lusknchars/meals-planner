@@ -78,11 +78,16 @@ with a physician.
    so it is the thing in bold — not the calories, not the price:
 
    ```
-   📅 **Mon** 1,830 kcal, $11.91
+   📅 **Mon** 1,830 kcal, **$11.91**
    🍏 **Yoghurt with apple and almonds**
    🍝 **Beef and tomato pasta**
    🥩 **Beef with potatoes and peas**
+
+   💵 Week total **$77.53**
    ```
+
+   Money is 💵. Not a coin, not a moneybag, not a bank: one symbol for money so
+   a total is recognisable at a glance in a thread full of food.
 
    A whole week that way is long. Offer the detail rather than sending it: give
    two or three days in full, then the totals, and ask whether they want the
@@ -175,6 +180,36 @@ name the gap and offer what is left:
 `stores` covers every supermarket in the state, not only the ones with prices, so
 there is nearly always somewhere to name.
 
+## Collecting the shopping
+
+`pickup` says where this conversation's shop is, how far, and when it shuts:
+
+```sh
+python3 /opt/hermes/skills/meals/scripts/meals.py --scope <chat> pickup
+```
+
+Give the name, the street, today's closing time, and the distance when there is
+one. `distance_km` is null until they have said where they are; that is a
+question to ask, never a zero to report:
+
+```
+🏪 **Ralphs Fresh Fare, Hillcrest**
+📍 1020 University Ave, San Diego
+🚗 **3.8 km** away
+🕕 Open until 23:00 today
+```
+
+**Nobody publishes what delivery costs**, so neither do you. `delivery` says
+that plainly and you pass it on: the store data carries prices and opening
+hours, not fulfilment fees. Offer collection details and point them at the
+shop's own app for a delivery charge. Never estimate one, and never present a
+distance as though it were a delivery price.
+
+To place them, ask for a postcode, never a street address: `compare.py --zip`
+already needs one to find the shop, and a postcode is enough for a distance
+worth quoting. Save it with `profile set --lat <n> --lon <n>` from the shop
+lookup, and say the distance is approximate, because it is.
+
 ## What does X cost
 
 Any food, not only catalogue ones:
@@ -221,8 +256,10 @@ probably standing up.
 
 - Lead each group with an emoji and a short label: 🥛 Milk, 🛒 Shopping, 📊 Today.
 - One fact per line. No line longer than about ten words.
-- **Never start a line with a hyphen or a dash.** A list is separate lines, or an
-  emoji, never a bullet character.
+- **Never use a dash.** Not to start a line, and not between two things either:
+  "1,830 kcal - $11.91" is punctuation nobody texts. A comma separates, a new
+  line separates better, and an emoji labels. A hyphen inside a word is part of
+  the word, so gluten-free stays as it is.
 - **Never escape punctuation.** Writing `\-` or `\~` sends a backslash to their
   screen. Say "about $2.74", not "~$2.74".
 - Bold at most one number per group, the one that answers the question.
