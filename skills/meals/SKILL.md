@@ -1,6 +1,6 @@
 ---
 name: meals
-description: Plan a week of meals inside a budget and a calorie target, build one shopping list, draft an order from places nearby, and record what was actually eaten. Use when someone asks what to eat, wants a plan or shopping list, wants food ordered, or reports a meal.
+description: Food prices, meals, shopping lists, calories, groceries
 ---
 
 # Meals
@@ -165,6 +165,17 @@ memory or from the web, however confident the figure feels. If this command has
 nothing, say there is no store price and offer to record one they tell you with
 `override set`. A Walmart figure recalled from somewhere is exactly the number
 this agent must not give.
+
+**Send the picture too.** The answer carries `best.product_id`, which is what
+`photo.py` takes:
+
+```sh
+python3 /opt/hermes/skills/meals/scripts/photo.py --store <locationId> \
+  --product-id <best.product_id>
+```
+
+Put `MEDIA:` and the path it prints on its own line, and the photo arrives as a
+real attachment. Photo first, then the price and size under it.
 
 Give the size with the price, because $3.79 means nothing alone:
 
