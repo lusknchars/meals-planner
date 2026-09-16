@@ -1,0 +1,764 @@
+{
+ "captured": "2026-09-16T14:12:36+00:00",
+ "hand_quarantined": [
+  "tomato sauce: matched a cheese turnover; awaiting a whole-word fix"
+ ],
+ "items": {
+  "avocado": {
+   "description": "Avocado, Hass, peeled, raw",
+   "fdc_id": 2710824,
+   "per_100g": {
+    "carb_g": 8.3235,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 20.31,
+    "fiber_g": null,
+    "kcal": 206.0,
+    "protein_g": 1.8125
+   },
+   "portions": [
+    {
+     "grams": 140.0,
+     "label": null
+    }
+   ],
+   "serving_g": 140.0
+  },
+  "bacon": {
+   "description": "Pork, cured, bacon, unprepared",
+   "fdc_id": 168277,
+   "per_100g": {
+    "carb_g": 0.0,
+    "energy_source": "kcal as published",
+    "fat_g": 37.13,
+    "fiber_g": 0.0,
+    "kcal": 393.0,
+    "protein_g": 13.66
+   },
+   "portions": [
+    {
+     "grams": 442.0,
+     "label": "package"
+    },
+    {
+     "grams": 28.0,
+     "label": "slice raw"
+    },
+    {
+     "grams": 113.0,
+     "label": "oz"
+    }
+   ],
+   "serving_g": 442.0
+  },
+  "banana": {
+   "description": "Bananas, ripe and slightly ripe, raw",
+   "fdc_id": 1105314,
+   "per_100g": {
+    "carb_g": 23.0,
+    "energy_source": "kcal as published",
+    "fat_g": 0.29,
+    "fiber_g": 1.7,
+    "kcal": 97.0,
+    "protein_g": 0.74
+   },
+   "portions": [
+    {
+     "grams": 115.0,
+     "label": "Peeled"
+    },
+    {
+     "grams": 140.0,
+     "label": null
+    }
+   ],
+   "serving_g": 115.0
+  },
+  "beans": {
+   "description": "Beans, snap, green, raw",
+   "fdc_id": 2346400,
+   "per_100g": {
+    "carb_g": 7.41245,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 0.275,
+    "fiber_g": 3.011,
+    "kcal": 33.6,
+    "protein_g": 1.96875
+   },
+   "portions": [
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 85.0
+  },
+  "berries": {
+   "description": "Cloudberries, raw (Alaska Native)",
+   "fdc_id": 169802,
+   "per_100g": {
+    "carb_g": 8.6,
+    "energy_source": "kcal as published",
+    "fat_g": 0.8,
+    "fiber_g": null,
+    "kcal": 51.0,
+    "protein_g": 2.4
+   },
+   "portions": [],
+   "serving_g": null
+  },
+  "black beans": {
+   "description": "Beans, black, mature seeds, raw",
+   "fdc_id": 173734,
+   "per_100g": {
+    "carb_g": 62.36,
+    "energy_source": "kcal as published",
+    "fat_g": 1.42,
+    "fiber_g": 15.5,
+    "kcal": 341.0,
+    "protein_g": 21.6
+   },
+   "portions": [
+    {
+     "grams": 194.0,
+     "label": "cup"
+    },
+    {
+     "grams": 12.1,
+     "label": "tbsp"
+    }
+   ],
+   "serving_g": 194.0
+  },
+  "bread": {
+   "description": "Bread, white, commercial",
+   "fdc_id": 2758993,
+   "per_100g": {
+    "carb_g": null,
+    "energy_source": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "kcal": null,
+    "protein_g": null
+   },
+   "portions": [],
+   "serving_g": null
+  },
+  "broccoli": {
+   "description": "Broccoli, raw",
+   "fdc_id": 747447,
+   "per_100g": {
+    "carb_g": 6.27,
+    "energy_source": "kcal as published",
+    "fat_g": 0.34,
+    "fiber_g": 2.4,
+    "kcal": 31.0,
+    "protein_g": 2.57
+   },
+   "portions": [
+    {
+     "grams": 76.0,
+     "label": "chopped"
+    },
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 76.0
+  },
+  "butter": {
+   "description": "Almond butter, creamy",
+   "fdc_id": 2262074,
+   "per_100g": {
+    "carb_g": 21.23666,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 53.04,
+    "fiber_g": 9.718,
+    "kcal": 602.5,
+    "protein_g": 20.78734
+   },
+   "portions": [],
+   "serving_g": null
+  },
+  "carrot": {
+   "description": "Carrots, baby, raw",
+   "fdc_id": 2258587,
+   "per_100g": {
+    "carb_g": 9.0787,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 0.1375,
+    "fiber_g": 2.694,
+    "kcal": 38.3,
+    "protein_g": 0.805
+   },
+   "portions": [
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 85.0
+  },
+  "cheese": {
+   "description": "Cheese, caraway",
+   "fdc_id": 173413,
+   "per_100g": {
+    "carb_g": 3.06,
+    "energy_source": "kcal as published",
+    "fat_g": 29.2,
+    "fiber_g": 0.0,
+    "kcal": 376.0,
+    "protein_g": 25.18
+   },
+   "portions": [
+    {
+     "grams": 28.35,
+     "label": "oz"
+    }
+   ],
+   "serving_g": 28.35
+  },
+  "chicken breast": {
+   "description": "Chicken, breast, meat and skin, raw",
+   "fdc_id": 2727569,
+   "per_100g": {
+    "carb_g": -0.42825,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 4.777,
+    "fiber_g": null,
+    "kcal": 132.8,
+    "protein_g": 21.40625
+   },
+   "portions": [
+    {
+     "grams": 114.0,
+     "label": null
+    }
+   ],
+   "serving_g": 114.0
+  },
+  "chickpeas": {
+   "description": "Chickpeas (garbanzo beans, bengal gram), mature seeds, raw",
+   "fdc_id": 173756,
+   "per_100g": {
+    "carb_g": 62.95,
+    "energy_source": "kcal as published",
+    "fat_g": 6.04,
+    "fiber_g": 12.2,
+    "kcal": 378.0,
+    "protein_g": 20.47
+   },
+   "portions": [
+    {
+     "grams": 12.5,
+     "label": "tbsp"
+    },
+    {
+     "grams": 200.0,
+     "label": "cup"
+    }
+   ],
+   "serving_g": 12.5
+  },
+  "courgette": {
+   "description": "Squash, summer, green, zucchini, includes skin, raw",
+   "fdc_id": 2685568,
+   "per_100g": {
+    "carb_g": 3.27,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 0.205,
+    "fiber_g": 0.7525,
+    "kcal": 16,
+    "protein_g": 0.984375
+   },
+   "portions": [
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 85.0
+  },
+  "cucumber": {
+   "description": "Cucumber, with peel, raw",
+   "fdc_id": 2346406,
+   "per_100g": {
+    "carb_g": 2.9525,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 0.1775,
+    "fiber_g": null,
+    "kcal": 13.9,
+    "protein_g": 0.625
+   },
+   "portions": [
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 85.0
+  },
+  "eggs": {
+   "description": "Eggs, Grade A, Large, egg whole",
+   "fdc_id": 748967,
+   "per_100g": {
+    "carb_g": 0.96,
+    "energy_source": "kcal as published",
+    "fat_g": 9.96,
+    "fiber_g": 0.0,
+    "kcal": 148.0,
+    "protein_g": 12.4
+   },
+   "portions": [
+    {
+     "grams": 50.3,
+     "label": "whole without shell"
+    },
+    {
+     "grams": 50.0,
+     "label": null
+    }
+   ],
+   "serving_g": 50.3
+  },
+  "kale": {
+   "description": "Kale, raw",
+   "fdc_id": 323505,
+   "per_100g": {
+    "carb_g": 4.42,
+    "energy_source": "kcal as published",
+    "fat_g": 1.49,
+    "fiber_g": 4.1,
+    "kcal": 35.0,
+    "protein_g": 2.92
+   },
+   "portions": [
+    {
+     "grams": 20.6,
+     "label": "pieces of ~1\""
+    },
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 20.6
+  },
+  "lentils": {
+   "description": "Lentils, raw",
+   "fdc_id": 172420,
+   "per_100g": {
+    "carb_g": 63.35,
+    "energy_source": "kcal as published",
+    "fat_g": 1.06,
+    "fiber_g": 10.7,
+    "kcal": 352.0,
+    "protein_g": 24.63
+   },
+   "portions": [
+    {
+     "grams": 12.0,
+     "label": "tablespoon"
+    },
+    {
+     "grams": 192.0,
+     "label": "cup"
+    }
+   ],
+   "serving_g": 12.0
+  },
+  "milk": {
+   "description": "Cheese, ricotta, whole milk",
+   "fdc_id": 746766,
+   "per_100g": {
+    "carb_g": 6.86,
+    "energy_source": "kcal as published",
+    "fat_g": 11.0,
+    "fiber_g": null,
+    "kcal": 157.0,
+    "protein_g": 7.81
+   },
+   "portions": [
+    {
+     "grams": 64.6,
+     "label": null
+    },
+    {
+     "grams": 258.0,
+     "label": null
+    },
+    {
+     "grams": 129.0,
+     "label": null
+    },
+    {
+     "grams": 55.0,
+     "label": null
+    }
+   ],
+   "serving_g": 64.6
+  },
+  "mushrooms": {
+   "description": "Mushrooms, enoki, raw",
+   "fdc_id": 169382,
+   "per_100g": {
+    "carb_g": 7.81,
+    "energy_source": "kcal as published",
+    "fat_g": 0.29,
+    "fiber_g": 2.7,
+    "kcal": 37.0,
+    "protein_g": 2.66
+   },
+   "portions": [
+    {
+     "grams": 5.0,
+     "label": "large"
+    },
+    {
+     "grams": 3.0,
+     "label": "medium"
+    },
+    {
+     "grams": 65.0,
+     "label": "cup sliced"
+    },
+    {
+     "grams": 64.0,
+     "label": "cup whole"
+    }
+   ],
+   "serving_g": 5.0
+  },
+  "oats": {
+   "description": "Oats, whole grain, rolled, old fashioned",
+   "fdc_id": 2346396,
+   "per_100g": {
+    "carb_g": 68.65755,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 5.89,
+    "fiber_g": null,
+    "kcal": 378.9,
+    "protein_g": 13.49645
+   },
+   "portions": [
+    {
+     "grams": 40.0,
+     "label": null
+    }
+   ],
+   "serving_g": 40.0
+  },
+  "olive oil": {
+   "description": "Oil, olive, extra light",
+   "fdc_id": 1750351,
+   "per_100g": {
+    "carb_g": null,
+    "energy_source": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "kcal": null,
+    "protein_g": null
+   },
+   "portions": [],
+   "serving_g": null
+  },
+  "onion": {
+   "description": "Onions, red, raw",
+   "fdc_id": 790577,
+   "per_100g": {
+    "carb_g": 9.93,
+    "energy_source": "kcal as published",
+    "fat_g": 0.1,
+    "fiber_g": 2.2,
+    "kcal": 44.0,
+    "protein_g": 0.94
+   },
+   "portions": [
+    {
+     "grams": 197.0,
+     "label": "Edible"
+    },
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 197.0
+  },
+  "pasta": {
+   "description": "Pasta, dry, whole grain, spaghetti ",
+   "fdc_id": 2759000,
+   "per_100g": {
+    "carb_g": null,
+    "energy_source": null,
+    "fat_g": null,
+    "fiber_g": null,
+    "kcal": null,
+    "protein_g": null
+   },
+   "portions": [],
+   "serving_g": null
+  },
+  "peanut butter": {
+   "description": "Peanut butter, creamy",
+   "fdc_id": 2262072,
+   "per_100g": {
+    "carb_g": 22.70376,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 49.43,
+    "fiber_g": 6.323,
+    "kcal": 589.4,
+    "protein_g": 23.99124
+   },
+   "portions": [],
+   "serving_g": null
+  },
+  "peppers": {
+   "description": "Peppers, bell, red, raw",
+   "fdc_id": 2258590,
+   "per_100g": {
+    "carb_g": 6.653175,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 0.1256,
+    "fiber_g": 1.158,
+    "kcal": 27.0,
+    "protein_g": 0.895625
+   },
+   "portions": [
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 85.0
+  },
+  "potatoes": {
+   "description": "Potatoes, raw, skin",
+   "fdc_id": 170032,
+   "per_100g": {
+    "carb_g": 12.44,
+    "energy_source": "kcal as published",
+    "fat_g": 0.1,
+    "fiber_g": 2.5,
+    "kcal": 58.0,
+    "protein_g": 2.57
+   },
+   "portions": [
+    {
+     "grams": 38.0,
+     "label": "skin"
+    }
+   ],
+   "serving_g": 38.0
+  },
+  "quinoa": {
+   "description": "Quinoa, uncooked",
+   "fdc_id": 168874,
+   "per_100g": {
+    "carb_g": 64.16,
+    "energy_source": "kcal as published",
+    "fat_g": 6.07,
+    "fiber_g": 7.0,
+    "kcal": 368.0,
+    "protein_g": 14.12
+   },
+   "portions": [
+    {
+     "grams": 170.0,
+     "label": "cup"
+    }
+   ],
+   "serving_g": 170.0
+  },
+  "rice": {
+   "description": "Wild rice, raw",
+   "fdc_id": 169726,
+   "per_100g": {
+    "carb_g": 74.9,
+    "energy_source": "kcal as published",
+    "fat_g": 1.08,
+    "fiber_g": 6.2,
+    "kcal": 357.0,
+    "protein_g": 14.73
+   },
+   "portions": [
+    {
+     "grams": 160.0,
+     "label": "cup"
+    }
+   ],
+   "serving_g": 160.0
+  },
+  "salmon fillet": {
+   "description": "Fish, salmon, Atlantic, farm raised, raw",
+   "fdc_id": 2684441,
+   "per_100g": {
+    "carb_g": 0,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 13.11,
+    "fiber_g": null,
+    "kcal": 203.1,
+    "protein_g": 20.31875
+   },
+   "portions": [
+    {
+     "grams": 115.0,
+     "label": null
+    }
+   ],
+   "serving_g": 115.0
+  },
+  "soy sauce": {
+   "description": "Soy sauce made from soy (tamari)",
+   "fdc_id": 174278,
+   "per_100g": {
+    "carb_g": 5.57,
+    "energy_source": "kcal as published",
+    "fat_g": 0.1,
+    "fiber_g": 0.8,
+    "kcal": 60.0,
+    "protein_g": 10.51
+   },
+   "portions": [
+    {
+     "grams": 6.0,
+     "label": "tsp"
+    },
+    {
+     "grams": 18.0,
+     "label": "tbsp"
+    }
+   ],
+   "serving_g": 6.0
+  },
+  "spinach": {
+   "description": "Spinach, raw",
+   "fdc_id": 168462,
+   "per_100g": {
+    "carb_g": 3.63,
+    "energy_source": "kcal as published",
+    "fat_g": 0.39,
+    "fiber_g": 2.2,
+    "kcal": 23.0,
+    "protein_g": 2.86
+   },
+   "portions": [
+    {
+     "grams": 340.0,
+     "label": "bunch"
+    },
+    {
+     "grams": 10.0,
+     "label": "leaf"
+    },
+    {
+     "grams": 30.0,
+     "label": "cup"
+    },
+    {
+     "grams": 284.0,
+     "label": "package (10 oz)"
+    }
+   ],
+   "serving_g": 340.0
+  },
+  "sweet potato": {
+   "description": "Sweet potatoes, orange flesh, without skin, raw",
+   "fdc_id": 2346404,
+   "per_100g": {
+    "carb_g": 17.327875,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 0.375,
+    "fiber_g": null,
+    "kcal": 77.4,
+    "protein_g": 1.578125
+   },
+   "portions": [
+    {
+     "grams": 110.0,
+     "label": null
+    }
+   ],
+   "serving_g": 110.0
+  },
+  "tapioca flour": null,
+  "tofu": {
+   "description": "Tofu, raw, firm, prepared with calcium sulfate",
+   "fdc_id": 172475,
+   "per_100g": {
+    "carb_g": 2.78,
+    "energy_source": "kcal as published",
+    "fat_g": 8.72,
+    "fiber_g": 2.3,
+    "kcal": 144.0,
+    "protein_g": 17.27
+   },
+   "portions": [
+    {
+     "grams": 126.0,
+     "label": "cup"
+    },
+    {
+     "grams": 81.0,
+     "label": "block"
+    }
+   ],
+   "serving_g": 126.0
+  },
+  "tomato": {
+   "description": "Tomatoes, grape, raw",
+   "fdc_id": 321360,
+   "per_100g": {
+    "carb_g": 5.51,
+    "energy_source": "kcal as published",
+    "fat_g": 0.63,
+    "fiber_g": 2.1,
+    "kcal": 27.0,
+    "protein_g": 0.83
+   },
+   "portions": [
+    {
+     "grams": 49.7,
+     "label": null
+    },
+    {
+     "grams": 152.0,
+     "label": null
+    },
+    {
+     "grams": 85.0,
+     "label": null
+    }
+   ],
+   "serving_g": 49.7
+  },
+  "tomato sauce": null,
+  "yoghurt": {
+   "description": "Yogurt, plain, whole milk",
+   "fdc_id": 2259793,
+   "per_100g": {
+    "carb_g": 5.574928,
+    "energy_source": "Atwater specific factors",
+    "fat_g": 4.484,
+    "fiber_g": null,
+    "kcal": 77.3,
+    "protein_g": 3.824172
+   },
+   "portions": [
+    {
+     "grams": 170.0,
+     "label": null
+    }
+   ],
+   "serving_g": 170.0
+  }
+ },
+ "licence": "public domain (US government work)",
+ "pending": [],
+ "source": "USDA FoodData Central",
+ "stopped": null,
+ "unmatched": [
+  "tapioca flour",
+  "tomato sauce"
+ ]
+}

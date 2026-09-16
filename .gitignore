@@ -6,3 +6,4 @@ __pycache__/
 /.env
 /prices.*.json
 skills/meals/prices.*.json
+skills/meals/nutrition.rejected.json

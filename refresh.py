@@ -39,10 +39,17 @@ KROGER_BASE = 'https://api.kroger.com/v1'
 USDA_BASE = 'https://api.nal.usda.gov/fdc/v1'
 # Nutrient name -> (unit that identifies it, key in the snapshot). The unit is
 # part of the match because Energy is published in both kcal and kJ.
-USDA_NUTRIENTS = {'Energy': ('kcal', 'kcal'), 'Protein': ('g', 'protein_g'),
+USDA_NUTRIENTS = {'Protein': ('g', 'protein_g'),
                   'Carbohydrate, by difference': ('g', 'carb_g'),
                   'Total lipid (fat)': ('g', 'fat_g'),
                   'Fiber, total dietary': ('g', 'fiber_g')}
+# Foundation rows never publish a bare "Energy" -- they give Atwater factors, and
+# the specific factors are the better figure for a particular food. Lower is
+# preferred. Matching only 'Energy' left every Foundation row with no calories.
+USDA_ENERGY = {'Energy (Atwater Specific Factors)': 1,
+               'Energy (Atwater General Factors)': 2, 'Energy': 3}
+ENERGY_LABEL = {1: 'Atwater specific factors', 2: 'Atwater general factors',
+                3: 'kcal as published'}
 USER_AGENT = 'meals-planner/1.0 (Hermes agent snapshot builder)'
 SHOP_FILTER = '["shop"~"^(supermarket|greengrocer)$"]'
 # California's bounding box, as a sanity check on coordinates given on the CLI.
@@ -326,23 +333,122 @@ def fetch_prices(fetch, client_id, client_secret, location_id, terms):
     return {'location_id': location_id, 'items': items}
 
 
-def usda_key():
+# Forms that are not the ingredient, whatever the name says. "Oil, oat" and
+# "Bacon, meatless" both name their ingredient and both would poison a diet plan.
+USDA_REJECT = ('oil', 'flour', 'powder', 'dehydrated', 'dried', 'meatless', 'substitute',
+               'juice', 'babyfood', 'baby food', 'snacks', 'chips', 'bagels', 'bread',
+               'muffins', 'crackers', 'cereals', 'mayonnaise', 'sticks', 'grease',
+               'vegetarian', 'imitation', 'sauce', 'soup', 'candy', 'beverage',
+               'pudding', 'puddings', 'overripe')
+# Words that describe a cut or state rather than the food. Stripped before
+# requiring the rest: "salmon fillet" must accept "Fish, salmon, sockeye, raw".
+USDA_GENERIC = ('fillet', 'fillets', 'fresh', 'whole', 'ground', 'chopped', 'sliced',
+                'breast', 'raw', 'large', 'medium', 'small')
+# Whole, plain forms to prefer once the rejects are gone.
+USDA_PREFER = ('raw', 'unprepared', 'whole', 'plain', 'uncooked')
+# Ingredients no ranking rule rescues, because the right row is not in a bare
+# search at all. These name the query that finds it.
+USDA_QUERIES = {
+    'oats': 'oats whole grain rolled',
+    'bacon': 'pork cured bacon unprepared',
+    'salmon fillet': 'fish salmon atlantic raw',
+    'tofu': 'tofu raw firm prepared with calcium sulfate',
+    'chickpeas': 'chickpeas garbanzo beans mature seeds cooked',
+    'yoghurt': 'yogurt plain whole milk',
+    'tapioca flour': 'tapioca pearl dry',
+    'eggs': 'eggs grade a large egg whole',
+}
+
+
+def usda_query(ingredient):
+    """What to ask USDA for. Falls back to the ordinary search term."""
+    return USDA_QUERIES.get((ingredient or '').strip().lower(), search_term(ingredient))
+
+
+def best_food(candidates, ingredient, search):
+    """The row that is actually this ingredient, or None.
+
+    Scores what survives: a rejected form never qualifies, the name still has to
+    appear, and a plain or raw entry beats a processed one. Returning None is a
+    real answer — an ingredient with no acceptable row is recorded unmatched,
+    because approximately-right macros are worse than admitted unknowns.
+    """
+    # Judge against the INGREDIENT, not the query. A curated query like "oats
+    # whole grain rolled" would demand every one of those words, and "salmon
+    # fillet" would reject "Fish, salmon, chinook, raw" for lacking "fillet" --
+    # so fall back to the ingredient's head word when the full phrase finds
+    # nothing. The search string still decides what USDA was asked for.
+    words = [word for word in re.split(r'[^a-z0-9]+', (ingredient or '').lower()) if word]
+    required = [word for word in words if word not in USDA_GENERIC] or words
+    # A form word that IS the ingredient cannot disqualify it: rejecting "oil"
+    # threw away olive oil, "bread" threw away bread, "sauce" threw away soy sauce.
+    rejects = [word for word in USDA_REJECT if word not in ' '.join(words)]
+    asked = [word for word in re.split(r'[^a-z0-9]+', (search or '').lower()) if word]
+    scored = []
+    for row in candidates or []:
+        description = (row.get('description') or '')
+        lowered = description.lower()
+        if any(word in lowered for word in rejects):
+            continue
+        # Every distinctive word, not just one of them: matching "black" alone
+        # accepted a plum for black beans.
+        if not all(relevant(word, word, description) for word in required):
+            continue
+        score = 0
+        if any(word in lowered for word in USDA_PREFER):
+            score += 3
+        if (row.get('dataType') or '') == 'Foundation':
+            score += 1
+        # The curated query describes the row we want; each of its words that
+        # lands is evidence. "Pork, cured, bacon" beats "Bacon, turkey".
+        score += sum(1 for word in asked if word in lowered)
+        # A short description is usually the plain food: "Bananas, raw" over
+        # "Babyfood, banana no tapioca, strained".
+        score -= len(description) / 200.0
+        scored.append((score, row))
+    if not scored:
+        return None
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return scored[0][1]
+
+
+def usda_key(env_path=None):
     """A free key from fdc.nal.usda.gov; DEMO_KEY is rate-limited and for
-    development only."""
-    return os.environ.get('USDA_API_KEY') or 'DEMO_KEY'
+    development only.
+
+    The environment wins, then .env, then the demo key. Reading the file matters:
+    the README tells people to put the key there, and for one release this
+    function ignored it and spent DEMO_KEY's quota instead.
+    """
+    found = os.environ.get('USDA_API_KEY')
+    if found:
+        return found
+    path = Path(env_path or Path(__file__).resolve().parent / '.env')
+    if path.is_file():
+        for line in path.read_text().splitlines():
+            key, sep, value = line.strip().partition('=')
+            if sep and key.strip() == 'USDA_API_KEY':
+                cleaned = value.strip().strip('"\'')
+                if cleaned:
+                    return cleaned
+    return 'DEMO_KEY'
 
 
-def usda_search(fetch, api_key, term):
-    """The best reference match for an ingredient, or None. Foundation and SR
-    Legacy carry portion weights; branded rows usually do not."""
-    url = (f'{USDA_BASE}/foods/search?api_key={urllib.parse.quote(str(api_key))}&pageSize=1'
+def usda_search(fetch, api_key, term, ingredient=None):
+    """The best reference match for an ingredient, or None.
+
+    Twenty-five candidates, not one: USDA orders results alphabetically rather
+    than by relevance, so the right row is often fifth and the first is an oil.
+    """
+    url = (f'{USDA_BASE}/foods/search?api_key={urllib.parse.quote(str(api_key))}&pageSize=25'
            f'&dataType={urllib.parse.quote("Foundation,SR Legacy")}'
            f'&query={urllib.parse.quote(str(term))}')
     status, raw = fetch('GET', url, headers={'User-Agent': USER_AGENT}, timeout=60)
     foods = _json(status, raw, 'USDA search').get('foods') or []
-    if not foods:
+    chosen = best_food(foods, ingredient or term, term)
+    if not chosen:
         return None
-    return {'fdc_id': foods[0].get('fdcId'), 'description': foods[0].get('description')}
+    return {'fdc_id': chosen.get('fdcId'), 'description': chosen.get('description')}
 
 
 def usda_food(fetch, api_key, fdc_id):
@@ -360,16 +466,32 @@ def nutrition_record(detail):
     371 calories.
     """
     per_100g = {key: None for key in ('kcal', 'protein_g', 'carb_g', 'fat_g', 'fiber_g')}
+    per_100g['energy_source'] = None
+    kilojoules, energy = None, None
     for row in detail.get('foodNutrients') or []:
         nutrient = row.get('nutrient') or {}
-        wanted = USDA_NUTRIENTS.get(nutrient.get('name'))
+        name, unit_name = nutrient.get('name'), (nutrient.get('unitName') or '').lower()
+        if name in USDA_ENERGY and unit_name == 'kcal' and row.get('amount') is not None:
+            rank = USDA_ENERGY[name]
+            if energy is None or rank < energy[0]:
+                energy = (rank, row.get('amount'))
+        if name == 'Energy' and unit_name == 'kj' and kilojoules is None:
+            kilojoules = row.get('amount')
+        wanted = USDA_NUTRIENTS.get(name)
         if not wanted:
             continue
         unit, key = wanted
-        if (nutrient.get('unitName') or '').lower() != unit.lower():
+        if unit_name != unit.lower():
             continue
         if per_100g[key] is None:
             per_100g[key] = row.get('amount')
+    if energy is not None:
+        per_100g['kcal'] = round(energy[1], 1)
+        per_100g['energy_source'] = ENERGY_LABEL[energy[0]]
+    # Some rows carry energy only in kilojoules; 4.184 kJ to the calorie.
+    if per_100g['kcal'] is None and kilojoules is not None:
+        per_100g['kcal'] = round(kilojoules / 4.184, 1)
+        per_100g['energy_source'] = 'converted from kJ'
     portions = [{'label': portion.get('modifier') or portion.get('portionDescription'),
                  'grams': portion.get('gramWeight')}
                 for portion in (detail.get('foodPortions') or []) if portion.get('gramWeight')]
@@ -393,13 +515,15 @@ def fetch_nutrition(fetch, api_key, terms):
     while remaining:
         term = remaining.pop(0)
         try:
-            found = usda_search(fetch, api_key, search_term(term))
+            found = usda_search(fetch, api_key, usda_query(term), ingredient=term)
             if not found:
                 items[term] = None
                 unmatched.append(term)
                 continue
             items[term] = nutrition_record(usda_food(fetch, api_key, found['fdc_id']))
-        except ValueError as refusal:
+        except (ValueError, OSError) as refusal:
+            # OSError covers URLError: an SSL handshake timeout mid-run threw away
+            # every lookup already made, which is what this guard exists to stop.
             stopped = f'{term}: {refusal}'
             pending = [term] + remaining
             break
@@ -506,6 +630,8 @@ def main(argv=None):
     nutrients.add_argument('--out', default=str(root / 'skills/meals/nutrition.json'))
     nutrients.add_argument('--api-key', dest='api_key',
                            help='a free FoodData Central key; DEMO_KEY is development only')
+    nutrients.add_argument('--env', default=str(root / '.env'),
+                           help='file holding USDA_API_KEY, as the Kroger path does')
 
     prices = sub.add_parser('prices', help='snapshot one Kroger store\'s prices')
     prices.add_argument('--zip', dest='zip_code', required=True)
@@ -531,7 +657,7 @@ def main(argv=None):
 
         if args.command == 'nutrition':
             terms = catalogue_terms(args.catalogue)
-            snapshot = fetch_nutrition(http, args.api_key or usda_key(), terms)
+            snapshot = fetch_nutrition(http, args.api_key or usda_key(args.env), terms)
             path = write_snapshot(args.out, snapshot, source='USDA FoodData Central',
                                   licence='public domain (US government work)')
             matched = sum(1 for row in snapshot['items'].values() if row)

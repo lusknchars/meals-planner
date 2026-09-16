@@ -8,10 +8,12 @@ No network here: fetch is injected, and the payloads mirror real responses seen
 on 2026-09-16 from FoodData Central.
 """
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+import urllib.error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import refresh  # noqa: E402
@@ -68,6 +70,37 @@ NO_FIBRE_REPLY = {
 }
 
 
+class Key(unittest.TestCase):
+    """The Kroger path reads .env; this one only read the environment, so a key
+    written to .env was silently ignored and DEMO_KEY's spent quota was used
+    instead. Nothing covered it, which is why it shipped."""
+
+    def setUp(self):
+        self.saved = os.environ.pop('USDA_API_KEY', None)
+        self.addCleanup(lambda: os.environ.__setitem__('USDA_API_KEY', self.saved)
+                        if self.saved is not None else None)
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.env = Path(self.temp.name) / '.env'
+
+    def test_the_key_comes_from_the_env_file(self):
+        self.env.write_text('KROGER_CLIENT_ID=x\nUSDA_API_KEY=abc123\n')
+        self.assertEqual(refresh.usda_key(self.env), 'abc123')
+
+    def test_quotes_and_spacing_do_not_travel_with_it(self):
+        self.env.write_text('USDA_API_KEY = "abc123"\n')
+        self.assertEqual(refresh.usda_key(self.env), 'abc123')
+
+    def test_the_environment_wins_over_the_file(self):
+        self.env.write_text('USDA_API_KEY=from-file\n')
+        os.environ['USDA_API_KEY'] = 'from-environment'
+        self.addCleanup(os.environ.pop, 'USDA_API_KEY', None)
+        self.assertEqual(refresh.usda_key(self.env), 'from-environment')
+
+    def test_demo_key_is_only_the_last_resort(self):
+        self.assertEqual(refresh.usda_key(Path(self.temp.name) / 'absent.env'), 'DEMO_KEY')
+
+
 class Lookup(unittest.TestCase):
     def test_search_asks_for_reference_foods_by_name(self):
         fetch = Recorder([(200, SEARCH_REPLY)])
@@ -83,6 +116,110 @@ class Lookup(unittest.TestCase):
     def test_nothing_found_is_none_not_an_exception(self):
         fetch = Recorder([(200, {'foods': []})])
         self.assertIsNone(refresh.usda_search(fetch, 'KEY123', 'unobtainium'))
+
+
+class Choosing(unittest.TestCase):
+    """USDA returns what it returns, and its first row is often a derivative.
+
+    Live, taking the top hit gave "Oil, oat" for oats (884 kcal, pure fat),
+    "Bacon, meatless" for bacon and "Bananas, dehydrated" for bananas. Wrong
+    macros feed a diet, so an ingredient with no acceptable row must come back
+    unmatched rather than approximately right.
+    """
+
+    OATS = [{'fdcId': 1, 'dataType': 'SR Legacy', 'description': 'Oil, oat'},
+            {'fdcId': 2, 'dataType': 'SR Legacy', 'description': 'Bagels, oat bran'},
+            {'fdcId': 3, 'dataType': 'SR Legacy', 'description': 'Bread, oat bran'}]
+    EGGS = [{'fdcId': 10, 'dataType': 'Foundation',
+             'description': 'Eggs, Grade A, Large, egg white'},
+            {'fdcId': 11, 'dataType': 'Foundation',
+             'description': 'Eggs, Grade A, Large, egg whole'},
+            {'fdcId': 12, 'dataType': 'Foundation',
+             'description': 'Eggs, Grade A, Large, egg yolk'}]
+    BANANA = [{'fdcId': 20, 'dataType': 'SR Legacy',
+               'description': 'Bananas, dehydrated, or banana powder'},
+              {'fdcId': 21, 'dataType': 'SR Legacy', 'description': 'Bananas, raw'},
+              {'fdcId': 22, 'dataType': 'SR Legacy', 'description': 'Snacks, banana chips'}]
+    SALMON = [{'fdcId': 30, 'dataType': 'SR Legacy', 'description': 'Vegetarian fillets'},
+              {'fdcId': 31, 'dataType': 'SR Legacy', 'description': 'Fish oil, salmon'},
+              {'fdcId': 32, 'dataType': 'SR Legacy', 'description': 'Fish, salmon, chinook, raw'}]
+
+    def test_nothing_acceptable_is_unmatched_not_approximately_right(self):
+        self.assertIsNone(refresh.best_food(self.OATS, 'oats', 'oats'),
+                          'oat oil is not oats at any confidence')
+
+    def test_the_whole_food_beats_its_parts(self):
+        chosen = refresh.best_food(self.EGGS, 'eggs', 'eggs')
+        self.assertEqual(chosen['description'], 'Eggs, Grade A, Large, egg whole')
+
+    def test_raw_beats_dehydrated_and_snacks(self):
+        chosen = refresh.best_food(self.BANANA, 'banana', 'banana')
+        self.assertEqual(chosen['description'], 'Bananas, raw')
+
+    def test_the_real_fish_beats_a_vegetarian_fillet_and_an_oil(self):
+        chosen = refresh.best_food(self.SALMON, 'salmon fillet', 'salmon fillet')
+        self.assertEqual(chosen['description'], 'Fish, salmon, chinook, raw')
+
+    def test_foundation_wins_a_tie(self):
+        rows = [{'fdcId': 40, 'dataType': 'SR Legacy', 'description': 'Spinach, raw'},
+                {'fdcId': 41, 'dataType': 'Foundation', 'description': 'Spinach, raw'}]
+        self.assertEqual(refresh.best_food(rows, 'spinach', 'spinach')['fdcId'], 41)
+
+    def test_a_form_word_that_is_the_ingredient_cannot_reject_it(self):
+        # The reject list contains oil, bread and sauce, which left olive oil,
+        # bread and soy sauce unmatched: the filter threw away the ingredients
+        # named after the forms it was meant to exclude.
+        oil = [{'fdcId': 50, 'dataType': 'SR Legacy',
+                'description': 'Oil, olive, salad or cooking'}]
+        self.assertIsNotNone(refresh.best_food(oil, 'olive oil', 'olive oil'))
+        loaf = [{'fdcId': 51, 'dataType': 'SR Legacy', 'description': 'Bread, whole-wheat'}]
+        self.assertIsNotNone(refresh.best_food(loaf, 'bread', 'bread'))
+        shoyu = [{'fdcId': 52, 'dataType': 'SR Legacy',
+                  'description': 'Soy sauce made from soy and wheat (shoyu)'}]
+        self.assertIsNotNone(refresh.best_food(shoyu, 'soy sauce', 'soy sauce'))
+
+    def test_every_distinctive_word_must_appear(self):
+        plum = [{'fdcId': 60, 'dataType': 'SR Legacy',
+                 'description': 'Plum, black, with skin, raw'}]
+        self.assertIsNone(refresh.best_food(plum, 'black beans', 'black beans'),
+                          'matching "black" alone accepted a plum for black beans')
+        beans = [{'fdcId': 61, 'dataType': 'SR Legacy',
+                  'description': 'Beans, black, mature seeds, raw'}]
+        self.assertIsNotNone(refresh.best_food(beans, 'black beans', 'black beans'))
+
+    def test_a_generic_cut_word_does_not_block_the_food(self):
+        salmon = [{'fdcId': 62, 'dataType': 'Foundation',
+                   'description': 'Fish, salmon, sockeye, wild caught, raw'}]
+        self.assertIsNotNone(refresh.best_food(salmon, 'salmon fillet', 'salmon fillet'))
+
+    def test_the_curated_query_words_break_a_tie(self):
+        rows = [{'fdcId': 70, 'dataType': 'SR Legacy',
+                 'description': 'Bacon, turkey, unprepared'},
+                {'fdcId': 71, 'dataType': 'SR Legacy',
+                 'description': 'Pork, cured, bacon, unprepared'}]
+        chosen = refresh.best_food(rows, 'bacon', 'pork cured bacon unprepared')
+        self.assertEqual(chosen['fdcId'], 71, 'the curated query asked for pork')
+
+    def test_atwater_energy_counts_as_energy(self):
+        detail = {'fdcId': 80, 'description': 'Oats, whole grain, steel cut',
+                  'foodNutrients': [
+                      {'nutrient': {'name': 'Energy (Atwater General Factors)',
+                                    'unitName': 'kcal'}, 'amount': 381.248},
+                      {'nutrient': {'name': 'Energy (Atwater Specific Factors)',
+                                    'unitName': 'kcal'}, 'amount': 379.2080612},
+                      {'nutrient': {'name': 'Protein', 'unitName': 'g'}, 'amount': 12.51},
+                  ], 'foodPortions': []}
+        row = refresh.nutrition_record(detail)
+        self.assertAlmostEqual(row['per_100g']['kcal'], 379.2, delta=0.1)
+        self.assertEqual(row['per_100g']['energy_source'], 'Atwater specific factors')
+
+    def test_a_curated_query_replaces_the_search_term(self):
+        # Neither plain oats nor cured bacon appears in a bare search's top rows,
+        # so those two ingredients name the query that finds them.
+        self.assertIn('oats', refresh.usda_query('oats').lower())
+        self.assertNotEqual(refresh.usda_query('oats'), 'oats')
+        self.assertIn('pork', refresh.usda_query('bacon').lower())
+        self.assertEqual(refresh.usda_query('spinach'), 'spinach')
 
 
 class Record(unittest.TestCase):
@@ -101,6 +238,21 @@ class Record(unittest.TestCase):
         self.assertEqual(row['portions'][0], {'label': 'NLEA serving', 'grams': 126.0})
         self.assertEqual(row['serving_g'], 126.0, 'the NLEA serving is the default portion')
         self.assertEqual(len(row['portions']), 2)
+
+    def test_energy_in_kilojoules_alone_is_converted(self):
+        # Some SR Legacy rows publish energy only in kJ, which left a correctly
+        # matched yogurt with kcal: None.
+        detail = {'fdcId': 5, 'description': 'Yogurt, plain, nonfat', 'foodNutrients': [
+            {'nutrient': {'name': 'Energy', 'unitName': 'kJ'}, 'amount': 234.0},
+            {'nutrient': {'name': 'Protein', 'unitName': 'g'}, 'amount': 5.25},
+            {'nutrient': {'name': 'Carbohydrate, by difference', 'unitName': 'g'},
+             'amount': 7.68},
+            {'nutrient': {'name': 'Total lipid (fat)', 'unitName': 'g'}, 'amount': 0.18},
+            {'nutrient': {'name': 'Fiber, total dietary', 'unitName': 'g'}, 'amount': 0.0},
+        ], 'foodPortions': []}
+        row = refresh.nutrition_record(detail)
+        self.assertAlmostEqual(row['per_100g']['kcal'], 55.9, delta=0.2)
+        self.assertEqual(row['per_100g']['energy_source'], 'converted from kJ')
 
     def test_a_missing_nutrient_is_unknown_not_zero(self):
         row = refresh.nutrition_record(NO_FIBRE_REPLY)
@@ -142,6 +294,26 @@ class Snapshot(unittest.TestCase):
         self.assertEqual(snapshot['pending'], ['oats', 'rice'])
         self.assertNotIn('oats', snapshot['items'])
         self.assertIn('OVER_RATE_LIMIT', snapshot['stopped'])
+
+    def test_a_transport_failure_also_keeps_what_was_fetched(self):
+        # A rate limit was handled; an SSL handshake timeout was not, and it
+        # discarded a run's worth of completed lookups.
+        class Flaky:
+            def __init__(self):
+                self.calls = 0
+
+            def __call__(self, method, url, headers=None, body=None, timeout=None):
+                self.calls += 1
+                if self.calls == 1:
+                    return 200, json.dumps(SEARCH_REPLY).encode()
+                if self.calls == 2:
+                    return 200, json.dumps(DETAIL_REPLY).encode()
+                raise urllib.error.URLError('_ssl.c:983: The handshake operation timed out')
+
+        snapshot = refresh.fetch_nutrition(Flaky(), 'KEY123', ['banana', 'oats', 'rice'])
+        self.assertIsNotNone(snapshot['items']['banana'])
+        self.assertEqual(snapshot['pending'], ['oats', 'rice'])
+        self.assertIn('handshake', snapshot['stopped'])
 
     def test_a_complete_run_reports_nothing_pending(self):
         fetch = Recorder([(200, SEARCH_REPLY), (200, DETAIL_REPLY)])
