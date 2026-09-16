@@ -142,6 +142,30 @@ def prices_snapshot(location_id):
     return read_snapshot(path, 'prices') if path.is_file() else None
 
 
+def value_label(rate, rates):
+    """Name how good this price is against what the same ingredient costs here.
+
+    The chosen row is always the cheapest, so the comparison says how far below
+    the usual price it sits — not whether it beats some national average, which
+    this data cannot support. One candidate means no spread to judge.
+    """
+    if len(rates) < 2:
+        return 'only priced option', None
+    ordered = sorted(rates)
+    middle = len(ordered) // 2
+    median = (ordered[middle] if len(ordered) % 2
+              else (ordered[middle - 1] + ordered[middle]) / 2)
+    median = round(median, 2)
+    if not median:
+        return 'only priced option', None
+    share = rate / median
+    if share <= 0.7:
+        return 'best value', median
+    if share <= 0.92:
+        return 'good value', median
+    return 'typical', median
+
+
 def priced(quantity, unit, candidates):
     """Cheapest real price for this quantity: (cost, product, value, package_price).
 
@@ -162,13 +186,15 @@ def priced(quantity, unit, candidates):
         if candidate.get('promo') and candidate.get('price'):
             rate = rate * candidate['promo'] / candidate['price']
         usable.append((rate, scale, candidate))
-    package = next((row.get('price') for row in candidates or [] if row.get('price')), None)
+    package = next((row.get('price') for row in candidates or []
+                    if row.get('price') and row.get('relevant') is not False), None)
     if not usable:
-        return None, None, None, package
+        return None, None, None, package, None, None
     usable.sort(key=lambda found: found[0])
     rate, scale, chosen = usable[0]
-    value = 'only priced option' if len(usable) == 1 else 'best value'
-    return round(rate * quantity * scale, 2), chosen, value, chosen.get('price')
+    value, median = value_label(rate, [found[0] for found in usable])
+    return (round(rate * quantity * scale, 2), chosen, value, chosen.get('price'),
+            round(rate, 2), median)
 
 
 def stores(db, scope, args):
@@ -313,18 +339,20 @@ def shopping(db, scope, args):
     for held in items:
         held['quantity'] = round(held['quantity'], 2)
         estimate = round(held['cost'], 2)
-        cost, product, value, package = priced(
+        cost, product, value, package, rate, median = priced(
             held['quantity'], held['unit'], (prices or {}).get('items', {}).get(held['item']))
         if cost is None:
             held.update(cost=estimate, estimate=estimate, product=None, brand=None,
                         value=None, price_source='catalogue estimate',
-                        package_price=package, promo=None, image=None)
+                        package_price=package, promo=None, image=None,
+                        unit_price=None, median_unit_price=None)
             continue
         held.update(cost=cost, estimate=estimate, product=product['description'],
                     brand=product.get('brand'), value=value,
                     price_source=f"kroger:{prices['location_id']} {stamp}",
                     package_price=product.get('price'), promo=product.get('promo'),
-                    image=product.get('image'))
+                    image=product.get('image'), unit_price=rate,
+                    median_unit_price=median)
         from_snapshot += 1
     return {'items': items, 'total_cost': round(sum(held['cost'] for held in items), 2),
             'currency': profile['currency'], 'start': saved['start'], 'people': profile['people'],

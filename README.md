@@ -68,6 +68,19 @@ package size can't be converted to the recipe's unit — a 32 oz bag has a per-k
 price, "family pack" does not, and the agent admits the difference instead of
 inventing one.
 
+### What "best value" means
+
+A priced line carries `unit_price`, `median_unit_price` and a `value` label
+comparing the two: `best value` at 70% of the median or below, `good value` to
+92%, `typical` above that, and `only priced option` when there was nothing to
+compare with. On a real basket that spread came out as 13 best, 11 good, 6
+typical across 33 lines.
+
+It is a price comparison at one store on one day. It says nothing about quality,
+nutrition or whether the food is worth buying, and both numbers are on the line
+so the claim can be checked. Sale prices count: Kroger cage-free eggs at $4.39
+with a $2.79 promo are compared at $0.155 each, not $0.24.
+
 ## Venues are sample data
 
 The shipped catalogue's restaurants are samples placed around one city so the

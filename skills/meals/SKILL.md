@@ -39,6 +39,13 @@ plan; read them back once when they are set.
    one row in eight, so say the description alone then — never the word "None".
    A line whose `price_source` is `catalogue estimate` has no product to name;
    call it an estimate instead of dressing it up.
+6. `value` compares this product's price to what the same ingredient costs at
+   this store today, against `median_unit_price`. `best value` and `good value`
+   mean cheaper than the usual price here; `typical` means it costs about what
+   the alternatives do; `only priced option` means there was nothing to compare
+   with. Say it as a price comparison, because that is all it is — never as a
+   claim about quality, health, or whether the food is worth eating. When
+   somebody asks why a line is good value, give the two numbers.
 
 Calories and prices come from the catalogue shipped with this skill. They are
 reference figures for planning, not a measurement of what someone cooks, and

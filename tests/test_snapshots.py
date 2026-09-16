@@ -68,6 +68,15 @@ PRICES = {
              'promo': 2.99, 'unit_price': 3.63, 'unit': 'kg',
              'image': 'https://www.kroger.com/product/images/medium/front/p4'},
         ],
+        # Two tofus priced within 4% of each other: nothing here is a bargain.
+        'tofu': [
+            {'product_id': 'p5', 'description': 'Firm Tofu', 'brand': 'House Foods',
+             'size': '14 oz', 'price': 3.99, 'promo': None, 'unit_price': 10.0,
+             'unit': 'kg', 'image': None},
+            {'product_id': 'p6', 'description': 'Organic Silken Tofu', 'brand': 'Simple Truth',
+             'size': '14 oz', 'price': 4.15, 'promo': None, 'unit_price': 10.4,
+             'unit': 'kg', 'image': None},
+        ],
     },
 }
 
@@ -172,10 +181,42 @@ class SnapshotAware(unittest.TestCase):
         # 100 g of 2 lb at the 2.99 promo: 2.99 / 0.907 kg = 3.30/kg -> 0.33
         self.assertEqual(beans['cost'], 0.33)
         self.assertEqual(beans['promo'], 2.99)
-        self.assertEqual(shopping['priced_from_snapshot'], 2)
-        # rice ("family pack" has no per-kilo price) and tofu (absent from the
-        # snapshot entirely) both fall back to the catalogue.
-        self.assertEqual(shopping['estimated'], 2)
+        self.assertEqual(shopping['priced_from_snapshot'], 3)
+        # only rice falls back now: "family pack" has no per-kilo price.
+        self.assertEqual(shopping['estimated'], 1)
+
+    def test_the_value_label_is_measured_against_the_local_spread(self):
+        self.profile()
+        self.call('plan', '--days', '1', '--start', '2026-09-16')
+        by_item = {item['item']: item for item in
+                   self.call('shopping', '--start', '2026-09-16')['items']}
+
+        # Oats: 4.95 against a 8.35 median for the same ingredient at this store.
+        oats = by_item['oats']
+        self.assertEqual(oats['value'], 'best value')
+        self.assertEqual(oats['unit_price'], 4.95)
+        self.assertEqual(oats['median_unit_price'], 8.35)
+
+        # Tofu: 10.00 against a 10.20 median. Cheapest, but no kind of bargain,
+        # and calling it "best value" would flatter a 2% difference.
+        tofu = by_item['tofu']
+        self.assertEqual(tofu['value'], 'typical')
+        self.assertEqual(tofu['unit_price'], 10.0)
+        self.assertEqual(tofu['median_unit_price'], 10.2)
+
+        # Beans: one candidate, so there is no spread to judge against.
+        self.assertEqual(by_item['beans']['value'], 'only priced option')
+        self.assertIsNone(by_item['beans']['median_unit_price'])
+
+    def test_an_estimated_line_claims_no_value_at_all(self):
+        self.profile()
+        self.call('plan', '--days', '1', '--start', '2026-09-16')
+        rice = {item['item']: item for item in
+                self.call('shopping', '--start', '2026-09-16')['items']}['rice']
+        self.assertEqual(rice['price_source'], 'catalogue estimate')
+        self.assertIsNone(rice['value'])
+        self.assertIsNone(rice['unit_price'])
+        self.assertIsNone(rice['median_unit_price'])
 
     def test_without_a_price_snapshot_nothing_changes(self):
         self.profile()
