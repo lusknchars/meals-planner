@@ -185,6 +185,66 @@ def value_label(rate, rates):
     return 'typical', median
 
 
+def nutrition_snapshot():
+    """USDA macros per ingredient, or None. No snapshot means no macro claims."""
+    path = Path(os.environ.get('MEALS_NUTRITION') or catalogue_dir() / 'nutrition.json')
+    return read_snapshot(path, 'nutrition') if path.is_file() else None
+
+
+def ingredient_macros(quantity, unit, record):
+    """Macros for this much of one ingredient, or None when they cannot be known.
+
+    Grams and millilitres scale straight off the per-100 g figures. A counted
+    ingredient needs the portion weight USDA publishes; without one there is no
+    honest way to turn "one banana" into grams, so the caller names it unknown
+    rather than inventing a weight.
+    """
+    if not record:
+        return None
+    per_100g = record.get('per_100g') or {}
+    if unit in ('g', 'ml'):
+        grams = quantity
+    elif unit in ('un', 'sl'):
+        serving = record.get('serving_g')
+        if not serving:
+            return None
+        grams = quantity * serving
+    elif unit == 'kg':
+        grams = quantity * 1000
+    else:
+        return None
+    share = grams / 100.0
+    macros = {}
+    for key in ('protein_g', 'carb_g', 'fat_g', 'fiber_g'):
+        value = per_100g.get(key)
+        if value is None:
+            return None
+        macros[key] = value * share
+    return macros
+
+
+def day_macros(meals, recipes, nutrition):
+    """Sum a day's macros, naming every ingredient that could not contribute."""
+    if not nutrition:
+        unknown = sorted({part['item'] for meal in meals
+                          for part in recipes[meal['recipe_id']]['ingredients']})
+        return {'protein_g': None, 'carb_g': None, 'fat_g': None, 'fiber_g': None,
+                'macros_unknown': unknown, 'macros_complete': False}
+    items = nutrition.get('items') or {}
+    totals = {'protein_g': 0.0, 'carb_g': 0.0, 'fat_g': 0.0, 'fiber_g': 0.0}
+    unknown = set()
+    for meal in meals:
+        for part in recipes[meal['recipe_id']]['ingredients']:
+            found = ingredient_macros(part['quantity'], part['unit'], items.get(part['item']))
+            if found is None:
+                unknown.add(part['item'])
+                continue
+            for key in totals:
+                totals[key] += found[key]
+    return {**{key: round(value, 1) for key, value in totals.items()},
+            'macros_unknown': sorted(unknown), 'macros_complete': not unknown}
+
+
 def priced(quantity, unit, candidates):
     """Cheapest real price for this quantity: (cost, product, value, package_price).
 
@@ -423,6 +483,8 @@ def set_profile(db, scope, args):
 def build_plan(profile, data, start, days):
     servings = profile['people']
     diet = profile['diet']
+    nutrition = nutrition_snapshot()
+    recipes = {recipe['id']: recipe for recipe in data['recipes']}
     result = []
     for index in range(days):
         date = start + dt.timedelta(days=index)
@@ -442,7 +504,8 @@ def build_plan(profile, data, start, days):
                           'cost': round(recipe['cost'] * servings, 2)})
         result.append({'date': date.isoformat(), 'meals': meals,
                        'calories': sum(meal['calories'] for meal in meals),
-                       'cost': round(sum(meal['cost'] for meal in meals), 2)})
+                       'cost': round(sum(meal['cost'] for meal in meals), 2),
+                       **day_macros(meals, recipes, nutrition)})
     total = round(sum(day['cost'] for day in result), 2)
     budget = profile['budget']
     return {'start': start.isoformat(), 'days': result, 'total_cost': total,

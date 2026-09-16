@@ -107,6 +107,53 @@ honest:
   it as an override. Every number in a total can name its origin: a store's API,
   a price you confirmed, or the catalogue.
 
+## Targets and macros
+
+Give the agent your stats and it works out the day's numbers — in code, not in a
+model's head:
+
+```sh
+meals.py --scope <chat> profile set --age 30 --sex male --height-in 70 \
+  --weight-lb 175 --activity moderate --goal maintenance
+meals.py --scope <chat> targets
+```
+
+Mifflin-St Jeor for BMR, an activity multiplier for TDEE, a goal adjustment, then
+macro grams: protein by bodyweight, fat at 25% of intake, carbohydrate the
+remainder, fibre at 14 g per 1,000 kcal with a 25 g floor. A target that would
+fall below **1,200 kcal for a woman or 1,500 for a man is held there**, flagged
+as `floored`, and the note says that going lower needs medical supervision. That
+floor is enforced in the script, not requested in a prompt.
+
+Plans then report what they actually contain:
+
+```sh
+python3 refresh.py nutrition          # macros for every catalogue ingredient
+```
+
+That snapshot comes from USDA FoodData Central (public domain), keyed by the
+catalogue's own ingredient names. Each plan day carries `protein_g`, `carb_g`,
+`fat_g` and `fiber_g`, plus `macros_unknown` naming anything that could not
+contribute — and `macros_complete` is false whenever that list is non-empty.
+
+Two rules worth knowing:
+
+- **Cost scales with household size; macros do not.** Quantities multiply by
+  `people` for the shopping list, but calories and macros are what one person eats.
+- **A counted ingredient needs USDA's published portion weight.** A banana is
+  126 g as an NLEA serving, which is a citable figure; without one, the
+  ingredient is named unknown rather than converted by a number I made up.
+
+A free key from [fdc.nal.usda.gov](https://fdc.nal.usda.gov/api-key-signup.html)
+goes in `.env` as `USDA_API_KEY`. `DEMO_KEY` allows roughly thirty calls an hour
+and a full catalogue needs seventy-six, so a rate-limited run keeps every lookup
+that succeeded and names the rest in `pending`. There is no resume: a re-run
+starts from the top.
+
+**This is not medical advice.** The agent holds no certification, says so, and
+points at a physician for a pre-existing condition, pregnancy, or a history of
+disordered eating.
+
 ## Venues are sample data
 
 The shipped catalogue's restaurants are samples placed around one city so the
