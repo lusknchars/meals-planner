@@ -164,8 +164,20 @@ class SizeParsing(unittest.TestCase):
         self.assertEqual(refresh.parse_size('2 lb'), (2.0, 'lb'))
 
     def test_sizes_that_do_not_parse_are_admitted_not_guessed(self):
-        for unparseable in ('1 ct', 'family pack', '', None, 'each'):
+        for unparseable in ('family pack', '', None, 'per lb', '32 onz'):
             self.assertIsNone(refresh.parse_size(unparseable), unparseable)
+
+    def test_counted_goods_parse_as_counts(self):
+        # Eggs are sold "12 ct", avocados "1 each" — the priciest line in a real
+        # basket was an estimate purely because counts were treated as unreadable.
+        self.assertEqual(refresh.parse_size('12 ct'), (12.0, 'ct'))
+        self.assertEqual(refresh.parse_size('18 ct'), (18.0, 'ct'))
+        self.assertEqual(refresh.parse_size('1 each'), (1.0, 'ct'))
+        self.assertEqual(refresh.parse_size('1 ea'), (1.0, 'ct'))
+
+    def test_unit_price_per_count(self):
+        self.assertEqual(refresh.unit_price(4.39, '18 ct'), (0.24, 'ct'))
+        self.assertEqual(refresh.unit_price(1.5, '1 each'), (1.5, 'ct'))
 
     def test_unit_price_per_kilo_or_litre_else_none(self):
         self.assertAlmostEqual(refresh.unit_price(4.49, '32 oz')[0], 4.95, places=2)
@@ -203,6 +215,79 @@ class Snapshots(unittest.TestCase):
         refresh.write_snapshot(path, {'stores': []}, source='s', licence='l')
         self.assertEqual([p.name for p in self.folder.iterdir()], ['stores.json'],
                          'no temporary file may be left beside the snapshot')
+
+
+class Relevance(unittest.TestCase):
+    """Kroger's search returns things that are not the ingredient. A plantain came
+    back for "banana" and, being the only count-priced row, won the basket at $0.99
+    each. A product has to name what it claims to be."""
+
+    def test_a_product_must_name_the_ingredient(self):
+        self.assertTrue(refresh.relevant('banana', 'banana',
+                                         'Fresh Bunch of Bananas - 5-7 Bananas'))
+        self.assertFalse(refresh.relevant('banana', 'banana', 'Fresh Plantain - Single'))
+
+    def test_the_search_term_is_what_gets_matched_not_the_catalogue_name(self):
+        # The catalogue says yoghurt; the shelf says Yogurt. The alias carries the
+        # match, and "plain" is what keeps a blueberry dessert cup out of it.
+        self.assertTrue(refresh.relevant('yoghurt', 'plain yogurt',
+                                         'Kroger Plain Low Fat Yogurt Tub'))
+        self.assertFalse(refresh.relevant('yoghurt', 'plain yogurt',
+                                          'Noosa Blueberry Yogurt Cup'))
+
+    def test_plurals_and_compound_names_still_match(self):
+        self.assertTrue(refresh.relevant('berries', 'berries',
+                                         'Fresh Strawberries - 1 LB Clamshell'))
+        self.assertTrue(refresh.relevant('eggs', 'eggs',
+                                         'Kroger Cage Free Grade AA Large White Eggs'))
+        self.assertTrue(refresh.relevant('black beans', 'black beans',
+                                         'Kroger Black Bean Each'))
+        # "Rice Krispies Treats Bar" passes this check, and should: it names rice.
+        # Telling a grain from a cereal bar needs category knowledge a name check
+        # does not have, and pretending otherwise would be a test that lies.
+
+    def test_synonyms_and_spacing_do_not_reject_the_right_product(self):
+        # Live, the guard threw away every chickpea Ralphs sells: the shelf calls
+        # them garbanzo beans, or spaces the word as "Chick Peas".
+        self.assertTrue(refresh.relevant('chickpeas', 'chickpeas',
+                                         'Kroger Garbanzo Beans Each'))
+        self.assertTrue(refresh.relevant('chickpeas', 'chickpeas',
+                                         'Goya Canned Chick Peas'))
+        self.assertTrue(refresh.relevant('courgette', 'zucchini', 'Zucchini Tray'))
+        self.assertFalse(refresh.relevant('chickpeas', 'chickpeas',
+                                          'Fresh Plantain - Single'))
+
+    def test_fetched_rows_carry_their_verdict(self):
+        fetch = Recorder([(200, TOKEN_REPLY), (200, PRODUCTS_REPLY)])
+        snapshot = refresh.fetch_prices(fetch, 'id-1', 'secret-1', '70100123', ['milk'])
+        rows = snapshot['items']['milk']
+        self.assertTrue(rows[0]['relevant'], rows[0]['description'])
+        self.assertFalse(rows[1]['relevant'], 'the rice row came back for a milk search')
+
+
+class TermAliases(unittest.TestCase):
+    """The catalogue is written in British English; Kroger sells American groceries.
+    The search term may differ from the catalogue name, but the snapshot key may not:
+    the skill looks ingredients up by the name the recipe uses."""
+
+    def test_a_catalogue_name_can_be_searched_under_another(self):
+        fetch = Recorder([(200, TOKEN_REPLY), (200, PRODUCTS_REPLY)])
+        snapshot = refresh.fetch_prices(fetch, 'id-1', 'secret-1', '70300022', ['courgette'])
+        searched = [row for row in fetch.requests if '/products' in row['url']][0]
+        self.assertIn('filter.term=zucchini', searched['url'])
+        self.assertIn('courgette', snapshot['items'])
+        self.assertNotIn('zucchini', snapshot['items'])
+
+    def test_an_unaliased_name_is_searched_as_written(self):
+        fetch = Recorder([(200, TOKEN_REPLY), (200, PRODUCTS_REPLY)])
+        refresh.fetch_prices(fetch, 'id-1', 'secret-1', '70300022', ['rice'])
+        searched = [row for row in fetch.requests if '/products' in row['url']][0]
+        self.assertIn('filter.term=rice', searched['url'])
+
+    def test_known_aliases(self):
+        self.assertEqual(refresh.search_term('courgette'), 'zucchini')
+        self.assertEqual(refresh.search_term('yoghurt'), 'plain yogurt')
+        self.assertEqual(refresh.search_term('rice'), 'rice')
 
 
 if __name__ == '__main__':

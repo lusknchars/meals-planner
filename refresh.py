@@ -45,7 +45,16 @@ WEIGHT_KG = {'oz': 0.0283495, 'lb': 0.453592, 'g': 0.001, 'kg': 1.0}
 VOLUME_L = {'fl oz': 0.0295735, 'gal': 3.78541, 'qt': 0.946353,
             'pt': 0.473176, 'ml': 0.001, 'l': 1.0}
 SIZE_RE = re.compile(r'^\s*(\d+(?:\.\d+)?|\d+\s*/\s*\d+)\s*'
-                     r'(fl\s*oz|oz|lb|gal|qt|pt|ml|l|kg|g)\s*$', re.IGNORECASE)
+                     r'(fl\s*oz|oz|lb|gal|qt|pt|ml|l|kg|g|ct|count|each|ea)\s*$', re.IGNORECASE)
+# Counted goods: eggs are "12 ct", avocados "1 each". Same idea, four spellings.
+COUNT_UNITS = {'ct', 'count', 'each', 'ea'}
+# The catalogue is written in British English; Kroger sells American groceries.
+# The search term may differ from the catalogue name, but the snapshot key never
+# does — the skill looks an ingredient up by the name its recipe uses.
+TERM_ALIASES = {'courgette': 'zucchini', 'yoghurt': 'plain yogurt',
+                'aubergine': 'eggplant', 'coriander': 'cilantro',
+                'rocket': 'arugula', 'spring onion': 'green onion',
+                'prawns': 'shrimp', 'mince': 'ground beef'}
 
 
 def _decoded(raw):
@@ -188,6 +197,72 @@ def kroger_locations(fetch, token, zip_code, limit=5):
     return found
 
 
+# The shelf's name for a thing is not always the recipe's. Accepted as the same
+# ingredient when judging whether a product is on target; unlike TERM_ALIASES,
+# which decides what to SEARCH for, these decide what counts as a match.
+SYNONYMS = {
+    'chickpeas': ('chickpea', 'garbanzo'),
+    'courgette': ('zucchini',), 'zucchini': ('courgette',),
+    'aubergine': ('eggplant',), 'coriander': ('cilantro',),
+    'rocket': ('arugula',), 'prawns': ('shrimp',),
+    'spring onion': ('green onion', 'scallion'),
+    'yoghurt': ('yogurt',), 'mince': ('ground beef',),
+}
+
+
+def _phrase_matches(phrase, text, compact):
+    """Every word of the phrase present, trimmed for plurals; failing that, the
+    phrase with separators removed — the shelf writes "Chick Peas" for chickpeas."""
+    words = [word for word in re.split(r'[^a-z0-9]+', phrase.lower()) if word]
+    if not words:
+        return False
+    for word in words:
+        stem = word
+        if len(stem) > 3 and stem.endswith('ies'):
+            stem = stem[:-3] + 'y'
+        elif len(stem) > 3 and stem.endswith('es'):
+            stem = stem[:-2]
+        elif len(stem) > 3 and stem.endswith('s'):
+            stem = stem[:-1]
+        if stem not in text and word not in text:
+            break
+    else:
+        return True
+    joined = re.sub(r'[^a-z0-9]', '', phrase.lower())
+    if len(joined) > 4 and joined.endswith('s'):
+        joined = joined[:-1]
+    return bool(joined) and joined in compact
+
+
+def relevant(ingredient, search, description):
+    """Whether this product is the thing that was asked for.
+
+    The recipe's name, the searched name and any known synonym each get a chance:
+    "berries" matches "Strawberries", "plain yogurt" matches "Plain Low Fat
+    Yogurt", "chickpeas" matches both "Garbanzo Beans" and "Chick Peas", and
+    "banana" matches no plantain.
+
+    This is a name check, not a category check. It cannot tell a grain from a
+    cereal bar named after one, so the cheapest relevant row can still be an odd
+    choice; it only keeps out products that never claim to be the ingredient.
+    """
+    text = (description or '').lower()
+    compact = re.sub(r'[^a-z0-9]', '', text)
+    # An alias REPLACES the catalogue name rather than sitting beside it: the
+    # alias is the more specific instruction. Judging "yoghurt" as well as
+    # "plain yogurt" would let a blueberry dessert cup through on the bare word.
+    phrase = (search or ingredient or '').strip().lower()
+    if not phrase:
+        return False
+    names = [phrase]
+    # A synonym renames one word and keeps the rest of the phrase qualified.
+    for word in phrase.split():
+        for other in SYNONYMS.get(word, ()):
+            names.append(phrase.replace(word, other))
+    names.extend(SYNONYMS.get(phrase, ()))
+    return any(_phrase_matches(name, text, compact) for name in names if name)
+
+
 def _front_image(product):
     """The medium front image, or None. A missing image is never a guessed URL."""
     for image in product.get('images') or []:
@@ -199,9 +274,10 @@ def _front_image(product):
     return None
 
 
-def kroger_products(fetch, token, location_id, term, limit=5):
+def kroger_products(fetch, token, location_id, term, limit=5, ingredient=None):
     """Products with this store's prices. ``promo`` is 0 when nothing is on sale,
-    which is not a price, so it becomes None."""
+    which is not a price, so it becomes None. Each row carries a verdict on whether
+    it is actually the ingredient, judged here where the search term is known."""
     url = (f'{KROGER_BASE}/products?filter.term={urllib.parse.quote(str(term))}'
            f'&filter.locationId={urllib.parse.quote(str(location_id))}&filter.limit={int(limit)}')
     status, raw = fetch('GET', url, headers={'Authorization': f'Bearer {token}'}, timeout=60)
@@ -222,8 +298,15 @@ def kroger_products(fetch, token, location_id, term, limit=5):
                       'promo': promo if promo else None,
                       'unit_price': measured[0] if measured else None,
                       'unit': measured[1] if measured else None,
+                      'relevant': relevant(ingredient or term, term,
+                                           product.get('description')),
                       'image': _front_image(product)})
     return found
+
+
+def search_term(ingredient):
+    """What to ask Kroger for. The catalogue's own name stays the key."""
+    return TERM_ALIASES.get(ingredient.strip().lower(), ingredient)
 
 
 def fetch_prices(fetch, client_id, client_secret, location_id, terms):
@@ -231,7 +314,8 @@ def fetch_prices(fetch, client_id, client_secret, location_id, terms):
     token = kroger_token(fetch, client_id, client_secret)
     items = {}
     for term in terms:
-        items[term] = kroger_products(fetch, token, location_id, term)
+        items[term] = kroger_products(fetch, token, location_id, search_term(term),
+                                      ingredient=term)
     return {'location_id': location_id, 'items': items}
 
 
@@ -244,6 +328,8 @@ def parse_size(value):
     if not match:
         return None
     raw, unit = match.group(1), re.sub(r'\s+', ' ', match.group(2).lower())
+    if unit in COUNT_UNITS:
+        unit = 'ct'
     if '/' in raw:
         top, bottom = (part.strip() for part in raw.split('/'))
         try:
@@ -261,6 +347,8 @@ def unit_price(price, size):
     if not parsed or not price:
         return None
     amount, unit = parsed
+    if unit == 'ct':
+        return round(price / amount, 2), 'ct'
     if unit in WEIGHT_KG:
         return round(price / (amount * WEIGHT_KG[unit]), 2), 'kg'
     if unit in VOLUME_L:

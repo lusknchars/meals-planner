@@ -22,7 +22,8 @@ DISTANCE_WEIGHT = 0.5
 OVERSHOOT_PENALTY = 6.0
 # Recipe units on the left, snapshot unit-price units on the right. A pair that is
 # not here (a count, a slice) has no comparable rate, so the estimate stands.
-UNIT_SCALE = {('g', 'kg'): 0.001, ('kg', 'kg'): 1.0, ('ml', 'l'): 0.001, ('l', 'l'): 1.0}
+UNIT_SCALE = {('g', 'kg'): 0.001, ('kg', 'kg'): 1.0, ('ml', 'l'): 0.001, ('l', 'l'): 1.0,
+              ('un', 'ct'): 1.0, ('sl', 'ct'): 1.0}
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS profiles (
@@ -150,6 +151,10 @@ def priced(quantity, unit, candidates):
     """
     usable = []
     for candidate in candidates or []:
+        # A row the snapshot marked off-target is not this ingredient at any price.
+        # Older snapshots carry no verdict, so absence means "not judged", not "no".
+        if candidate.get('relevant') is False:
+            continue
         scale = UNIT_SCALE.get((unit, candidate.get('unit')))
         if not candidate.get('unit_price') or scale is None:
             continue

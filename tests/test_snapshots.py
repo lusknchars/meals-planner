@@ -175,5 +175,75 @@ class SnapshotAware(unittest.TestCase):
         self.assertEqual(shopping['priced_from_snapshot'], 0)
 
 
+class OffTargetProducts(unittest.TestCase):
+    """A count-priced product that is not the ingredient must never win the line.
+    Live, a plantain at $0.99 each priced a week of bananas at $7.92."""
+
+    CATALOGUE = {
+        'currency': 'USD',
+        # plan needs every slot filled, so lunch and dinner are here as ballast:
+        # only the banana line is under test.
+        'recipes': [{'id': 'fruit', 'title': 'Fruit plate', 'slot': 'breakfast',
+                     'calories': 300, 'cost': 1.0, 'tags': ['vegetarian'],
+                     'ingredients': [{'item': 'banana', 'quantity': 4, 'unit': 'un',
+                                      'cost': 1.0}]},
+                    {'id': 'salad', 'title': 'Salad', 'slot': 'lunch',
+                     'calories': 600, 'cost': 2.0, 'tags': ['vegetarian'],
+                     'ingredients': [{'item': 'lettuce', 'quantity': 200, 'unit': 'g',
+                                      'cost': 2.0}]},
+                    {'id': 'soup', 'title': 'Soup', 'slot': 'dinner',
+                     'calories': 700, 'cost': 3.0, 'tags': ['vegetarian'],
+                     'ingredients': [{'item': 'lentils', 'quantity': 150, 'unit': 'g',
+                                      'cost': 3.0}]}],
+        'venues': [],
+    }
+    PRICES = {
+        'captured': '2026-09-16T02:00:00+00:00', 'source': 'Kroger Products API',
+        'licence': 'Kroger developer terms; not redistributed',
+        'location_id': '70300022',
+        'items': {'banana': [
+            {'product_id': 'p9', 'description': 'Fresh Plantain - Single', 'size': '1 ea',
+             'price': 0.99, 'promo': None, 'unit_price': 0.99, 'unit': 'ct',
+             'relevant': False, 'image': None},
+            {'product_id': 'p8', 'description': 'Fresh Bunch of Bananas', 'size': '1 lb',
+             'price': 0.69, 'promo': None, 'unit_price': 1.52, 'unit': 'kg',
+             'relevant': True, 'image': None},
+        ]},
+    }
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.home = Path(self.temp.name)
+        self.catalogue = self.home / 'catalogue.json'
+        self.catalogue.write_text(json.dumps(self.CATALOGUE))
+        self.prices_dir = self.home / 'snapshots'
+        self.prices_dir.mkdir()
+        (self.prices_dir / 'prices.70300022.json').write_text(json.dumps(self.PRICES))
+
+    def call(self, *args, success=True):
+        env = {**os.environ, 'HERMES_HOME': str(self.home),
+               'MEALS_CATALOGUE': str(self.catalogue),
+               'MEALS_PRICES_DIR': str(self.prices_dir)}
+        result = subprocess.run([sys.executable, str(SCRIPT), '--scope', 'chat-1', *args],
+                                env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0 if success else 1, result.stderr)
+        return json.loads(result.stdout if success else result.stderr)
+
+    def test_an_off_target_count_product_never_prices_the_line(self):
+        self.call('profile', 'set', '--people', '1', '--calories', '2000',
+                  '--diet', 'vegetarian', '--store', '70300022')
+        self.call('plan', '--days', '1', '--start', '2026-09-16')
+        shopping = self.call('shopping', '--start', '2026-09-16')
+        banana = {item['item']: item for item in shopping['items']}['banana']
+        # The only comparable row is the plantain, and it is not a banana: the
+        # bunch is priced by weight, which a count recipe cannot use. So the
+        # catalogue estimate stands, and the reply says so.
+        self.assertEqual(banana['cost'], 1.0)
+        self.assertEqual(banana['price_source'], 'catalogue estimate')
+        self.assertIsNone(banana['product'])
+        self.assertEqual(shopping['priced_from_snapshot'], 0)
+
+
 if __name__ == '__main__':
     unittest.main()
