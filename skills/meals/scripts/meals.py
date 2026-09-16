@@ -10,6 +10,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import sqlite3
 import sys
 import uuid
@@ -45,7 +46,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   scope TEXT PRIMARY KEY, people INTEGER NOT NULL, calories INTEGER NOT NULL,
   budget REAL, diet TEXT NOT NULL, lat REAL, lon REAL, address TEXT,
   currency TEXT NOT NULL, store_location_id TEXT, age INTEGER, sex TEXT,
-  height_in REAL, weight_lb REAL, activity TEXT, goal TEXT);
+  height_in REAL, weight_lb REAL, activity TEXT, goal TEXT, phone TEXT, country TEXT,
+  price_country TEXT);
 CREATE TABLE IF NOT EXISTS plans (
   scope TEXT NOT NULL, start TEXT NOT NULL, days INTEGER NOT NULL,
   payload TEXT NOT NULL, PRIMARY KEY (scope, start));
@@ -122,7 +124,8 @@ def connect():
 # has no column named store_location_id".
 ADDED_COLUMNS = (('store_location_id', 'TEXT'), ('age', 'INTEGER'), ('sex', 'TEXT'),
                  ('height_in', 'REAL'), ('weight_lb', 'REAL'), ('activity', 'TEXT'),
-                 ('goal', 'TEXT'))
+                 ('goal', 'TEXT'), ('phone', 'TEXT'), ('country', 'TEXT'),
+                 ('price_country', 'TEXT'))
 
 
 def migrate(db):
@@ -376,6 +379,35 @@ def targets(db, scope, args):
 
 
 MACRO_KEYS = ('kcal', 'protein_g', 'carb_g', 'fat_g', 'fiber_g')
+# Dialling codes, longest first so +351 is read before +35. Enough to tell whose
+# stores a price belongs to; an unrecognised code stays unknown rather than
+# guessing a country from a number.
+DIALLING_CODES = (('351', 'PT'), ('55', 'BR'), ('49', 'DE'), ('44', 'GB'), ('39', 'IT'),
+                  ('34', 'ES'), ('33', 'FR'), ('81', 'JP'), ('91', 'IN'), ('86', 'CN'),
+                  ('61', 'AU'), ('52', 'MX'), ('54', 'AR'), ('1', 'US'))
+COUNTRY_CURRENCY = {'US': 'USD', 'BR': 'BRL', 'GB': 'GBP', 'PT': 'EUR', 'DE': 'EUR',
+                    'IT': 'EUR', 'ES': 'EUR', 'FR': 'EUR', 'JP': 'JPY', 'IN': 'INR',
+                    'CN': 'CNY', 'AU': 'AUD', 'MX': 'MXN', 'AR': 'ARS'}
+
+
+def country_from_phone(number):
+    """Which country a number belongs to, or None. Needs the + : a bare string of
+    digits could be anything, and a guessed country picks the wrong shops."""
+    if not isinstance(number, str):
+        return None
+    digits = re.sub(r'[^0-9+]', '', number)
+    if not digits.startswith('+'):
+        return None
+    digits = digits[1:]
+    for code, country in DIALLING_CODES:
+        if digits.startswith(code) and len(digits) > len(code) + 5:
+            return country
+    return None
+
+
+def currency_for(country):
+    """The currency of a country, or None. An unknown country invents nothing."""
+    return COUNTRY_CURRENCY.get((country or '').strip().upper()) or None
 # The order a shop is walked, not the order the alphabet falls in. "Other" is
 # last and always exists: an ingredient nobody categorised still has to be bought.
 SECTION_ORDER = ('Produce', 'Bakery', 'Meat & Fish', 'Dairy', 'Pantry', 'Frozen', 'Other')
@@ -524,7 +556,8 @@ def set_profile(db, scope, args):
         'scope': scope, 'people': 1, 'calories': 2000, 'budget': None,
         'diet': '[]', 'lat': None, 'lon': None, 'address': None, 'currency': None,
         'store_location_id': None, 'age': None, 'sex': None, 'height_in': None,
-        'weight_lb': None, 'activity': None, 'goal': None}
+        'weight_lb': None, 'activity': None, 'goal': None, 'phone': None,
+        'country': None, 'price_country': None}
     if args.people is not None:
         saved['people'] = int(positive(args.people, 'people'))
     if args.calories is not None:
@@ -562,11 +595,24 @@ def set_profile(db, scope, args):
         if aim not in GOAL_SHIFT:
             raise ValueError('goal must be one of: ' + ', '.join(sorted(set(GOAL_SHIFT))))
         saved['goal'] = aim
+    # The number says which country's shops are theirs, and that decides whose
+    # prices mean anything. Their own currency follows from it.
+    if getattr(args, 'phone', None) is not None:
+        saved['phone'] = text(args.phone, 'phone', 40)
+        found = country_from_phone(saved['phone'])
+        if found:
+            saved['country'] = found
+            saved['currency'] = currency_for(found) or saved['currency']
+    # Asked for, never assumed: somebody abroad may still want US prices, and
+    # somebody who does not should not be shown them by default.
+    if getattr(args, 'price_country', None) is not None:
+        saved['price_country'] = text(args.price_country, 'price country', 8).strip().upper()
     saved['currency'] = text(args.currency, 'currency', 8, optional=True) or \
         saved['currency'] or catalogue()['currency']
     db.execute('''INSERT INTO profiles (scope, people, calories, budget, diet, lat, lon,
                   address, currency, store_location_id, age, sex, height_in, weight_lb,
-                  activity, goal) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                  activity, goal, phone, country, price_country)
+                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                   ON CONFLICT(scope) DO UPDATE SET people=excluded.people,
                   calories=excluded.calories, budget=excluded.budget, diet=excluded.diet,
                   lat=excluded.lat, lon=excluded.lon, address=excluded.address,
@@ -574,11 +620,13 @@ def set_profile(db, scope, args):
                   store_location_id=excluded.store_location_id, age=excluded.age,
                   sex=excluded.sex, height_in=excluded.height_in,
                   weight_lb=excluded.weight_lb, activity=excluded.activity,
-                  goal=excluded.goal''',
+                  goal=excluded.goal, phone=excluded.phone, country=excluded.country,
+                  price_country=excluded.price_country''',
                (scope, saved['people'], saved['calories'], saved['budget'], saved['diet'],
                 saved['lat'], saved['lon'], saved['address'], saved['currency'],
                 saved['store_location_id'], saved['age'], saved['sex'], saved['height_in'],
-                saved['weight_lb'], saved['activity'], saved['goal']))
+                saved['weight_lb'], saved['activity'], saved['goal'], saved['phone'],
+                saved['country'], saved['price_country']))
     db.commit()
     return {'profile': read_profile(db, scope)}
 
@@ -659,6 +707,16 @@ def shopping(db, scope, args):
                 held['cost'] += part['cost'] * profile['people']
     items = sorted(basket.values(), key=lambda held: held['item'])
     prices = prices_snapshot(profile['store_location_id'])
+    # Whose shops are these? A price from the wrong country looks exactly like a
+    # real one, which makes it worse than an admitted gap. The person can ask for
+    # them anyway -- price_country records that they did.
+    theirs = (profile.get('price_country') or profile.get('country') or '').strip().upper()
+    snapshot_country = ((prices or {}).get('country') or 'US').strip().upper()
+    suppressed = bool(prices and theirs and theirs != snapshot_country)
+    because = (f'prices are {snapshot_country} store prices and this number is {theirs}; '
+               f'ask for {snapshot_country} prices to see them anyway') if suppressed else None
+    if suppressed:
+        prices = None
     stamp = (prices or {}).get('captured', '')[:10]
     confirmed = {row['item']: row for row in read_overrides(db, scope)}
     cutoff = dt.date.today() - dt.timedelta(days=override_days())
@@ -700,13 +758,25 @@ def shopping(db, scope, args):
                     image=product.get('image'), unit_price=rate,
                     median_unit_price=median)
         from_snapshot += 1
+    # The money these numbers are actually in, which is not always the reader's.
+    # A suppressed list is USD-shaped catalogue estimates; labelling them BRL
+    # because the reader is Brazilian is the same mislabelling, moved one field
+    # over. their_currency carries what their money is.
+    figures_in = ((prices or {}).get('currency') or catalogue().get('currency') or 'USD') \
+        if prices else (catalogue().get('currency') or 'USD')
     return {'items': items, 'sections': sectioned(items, catalogue().get('categories') or {}),
             'total_cost': round(sum(held['cost'] for held in items), 2),
-            'currency': profile['currency'], 'start': saved['start'], 'people': profile['people'],
+            'currency': figures_in, 'their_currency': profile['currency'],
+            'start': saved['start'], 'people': profile['people'],
             'priced_from_snapshot': from_snapshot, 'confirmed_by_you': by_hand,
             'estimated': len(items) - from_snapshot - by_hand,
             'stale_overrides': stale, 'mismatched_overrides': mismatched,
-            'prices_captured': stamp or None}
+            'prices_captured': stamp or None,
+            'store_prices_suppressed': suppressed, 'suppressed_because': because,
+            # The catalogue's figures are USD-shaped. Calling them reais because
+            # the reader is Brazilian would be a different lie from the one this
+            # suppression removes.
+            'estimates_currency': catalogue().get('currency') or 'USD'}
 
 
 def consumed_on(db, scope, date):
@@ -837,6 +907,10 @@ def parser():
     setter.add_argument('--weight-lb', dest='weight_lb', type=float)
     setter.add_argument('--activity', help='sedentary, light, moderate, very active, athlete')
     setter.add_argument('--goal', help='fat loss, maintenance, muscle gain, performance')
+    setter.add_argument('--phone', help="their own number, with its + : which country's "
+                                        'shops are theirs')
+    setter.add_argument('--price-country', dest='price_country',
+                        help='whose prices they asked to see, when it is not their own')
     actions.add_parser('show')
 
     week = sub.add_parser('plan', help='plan meals for a run of days')

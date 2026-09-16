@@ -165,6 +165,18 @@ class Choosing(unittest.TestCase):
                 {'fdcId': 41, 'dataType': 'Foundation', 'description': 'Spinach, raw'}]
         self.assertEqual(refresh.best_food(rows, 'spinach', 'spinach')['fdcId'], 41)
 
+    def test_a_reject_word_inside_another_word_does_not_fire(self):
+        # "oil" is a reject word and "boiled" contains it, so a substring test
+        # threw away every cooked food USDA publishes: chickpeas, asparagus,
+        # beets. Three curated queries returned nothing at all because of it.
+        cooked = [{'fdcId': 100, 'dataType': 'SR Legacy',
+                   'description': 'Chickpeas (garbanzo beans, bengal gram), mature seeds, '
+                                  'cooked, boiled, without salt'}]
+        self.assertIsNotNone(refresh.best_food(cooked, 'chickpeas', 'chickpeas cooked boiled'))
+        # The actual oil is still refused for an ingredient that is not oil.
+        self.assertIsNone(refresh.best_food(
+            [{'fdcId': 101, 'dataType': 'SR Legacy', 'description': 'Oil, oat'}], 'oats', 'oats'))
+
     def test_a_form_word_that_is_the_ingredient_cannot_reject_it(self):
         # The reject list contains oil, bread and sauce, which left olive oil,
         # bread and soy sauce unmatched: the filter threw away the ingredients

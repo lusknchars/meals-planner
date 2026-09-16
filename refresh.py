@@ -119,6 +119,41 @@ def overpass_query(lat, lon, radius_km=5):
             f'(node({around}){SHOP_FILTER};way({around}){SHOP_FILTER};);out center;')
 
 
+def region_query(region):
+    """Every supermarket in a state or country, by ISO 3166-2 code.
+
+    A radius covers one city. "Is there anywhere to shop near me" should answer
+    anywhere in the state, including the places no Kroger banner reaches.
+    """
+    code = text_code(region)
+    return (f'[out:json][timeout:300];'
+            f'area["ISO3166-2"="{code}"]->.here;'
+            f'(node(area.here){SHOP_FILTER};way(area.here){SHOP_FILTER};);out center;')
+
+
+def text_code(region):
+    code = (region or '').strip().upper()
+    if not re.fullmatch(r'[A-Z]{2}-[A-Z0-9]{1,3}', code):
+        raise ValueError('region must be an ISO 3166-2 code such as US-CA')
+    return code
+
+
+def fetch_region(fetch, region):
+    """Every supermarket in a region, trying each mirror in turn."""
+    body = urllib.parse.urlencode({'data': region_query(region)}).encode()
+    problems = []
+    for mirror in OVERPASS_MIRRORS:
+        status, raw = fetch('POST', mirror,
+                            headers={'User-Agent': USER_AGENT,
+                                     'Content-Type': 'application/x-www-form-urlencoded'},
+                            body=body, timeout=420)
+        try:
+            return store_records(_json(status, raw, f'Overpass ({mirror})').get('elements', []))
+        except ValueError as error:
+            problems.append(str(error).split(':')[0])
+    raise ValueError('every Overpass mirror refused this region: ' + '; '.join(problems))
+
+
 def store_records(elements):
     """Normalise Overpass elements. An unnamed shop is dropped: it cannot be named
     to somebody as the place to go."""
@@ -365,6 +400,9 @@ USDA_QUERIES = {
     # A bare search returned "Cloudberries, raw (Alaska Native)": a subsistence
     # food with no portion weight, standing in for the strawberries a plan prices.
     'berries': 'strawberries raw',
+    # Scoring cannot separate buttermilk, sheep, buffalo and chocolate milk from
+    # the plain stuff, and a bare search had settled on ricotta cheese.
+    'milk': 'milk whole 3.25% milkfat',
 }
 
 
@@ -390,13 +428,17 @@ def best_food(candidates, ingredient, search):
     required = [word for word in words if word not in USDA_GENERIC] or words
     # A form word that IS the ingredient cannot disqualify it: rejecting "oil"
     # threw away olive oil, "bread" threw away bread, "sauce" threw away soy sauce.
+    # Whole words only. "oil" is a reject word and "boiled" contains it, which
+    # threw away every cooked food USDA publishes -- chickpeas, asparagus, beets.
     rejects = [word for word in USDA_REJECT if word not in ' '.join(words)]
+    reject_re = re.compile(r'\b(' + '|'.join(re.escape(word) for word in rejects) + r')\b'
+                           ) if rejects else None
     asked = [word for word in re.split(r'[^a-z0-9]+', (search or '').lower()) if word]
     scored = []
     for row in candidates or []:
         description = (row.get('description') or '')
         lowered = description.lower()
-        if any(word in lowered for word in rejects):
+        if reject_re and reject_re.search(lowered):
             continue
         # Every distinctive word, not just one of them: matching "black" alone
         # accepted a plum for black beans.
@@ -627,9 +669,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
 
-    stores = sub.add_parser('stores', help='snapshot supermarkets near a point')
-    stores.add_argument('--lat', type=float, required=True)
-    stores.add_argument('--lon', type=float, required=True)
+    stores = sub.add_parser('stores', help='snapshot supermarkets near a point, or a whole region')
+    stores.add_argument('--region', help='ISO 3166-2 code, such as US-CA, for a whole state')
+    stores.add_argument('--lat', type=float)
+    stores.add_argument('--lon', type=float)
     stores.add_argument('--radius-km', type=float, default=5)
     stores.add_argument('--out', default=str(root / 'skills/meals/stores.json'))
 
@@ -651,6 +694,16 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == 'stores':
+            if args.region:
+                found = fetch_region(http, args.region)
+                path = write_snapshot(args.out, {'stores': found, 'region': text_code(args.region)},
+                                      source='OpenStreetMap via Overpass', licence='ODbL 1.0')
+                brands = len({store['brand'] for store in found if store.get('brand')})
+                print(f'{len(found)} stores across {text_code(args.region)} '
+                      f'({brands} brands) -> {path}')
+                return 0
+            if args.lat is None or args.lon is None:
+                raise ValueError('give --region for a state, or --lat and --lon for a radius')
             south, west, north, east = CALIFORNIA
             if not (south <= args.lat <= north and west <= args.lon <= east):
                 print('note: that point is outside California; snapshotting it anyway',
@@ -694,6 +747,9 @@ def main(argv=None):
             print(f"using {found[0]['name']} ({location_id})")
         terms = catalogue_terms(args.catalogue)
         snapshot = fetch_prices(http, client_id, client_secret, location_id, terms)
+        # Whose shops these are. Kroger prices US stores, and a reader elsewhere
+        # needs to be told that rather than shown a number about the wrong country.
+        snapshot['country'] = 'US'
         path = write_snapshot(Path(args.out_dir) / f'prices.{location_id}.json', snapshot,
                               source='Kroger Products API',
                               licence='Kroger developer terms; not redistributed', private=True)

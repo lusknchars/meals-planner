@@ -134,6 +134,43 @@ shopping list prices against that store.
 If it answers that no credentials are set, the owner has not supplied a Kroger
 key for this installation. Say so; do not guess prices.
 
+**When it finds nothing, say what is missing rather than nothing.** Kroger prices
+Ralphs, Food 4 Less and Foods Co: Los Angeles and San Diego have Ralphs and Food
+4 Less, San Francisco and Sacramento and Fresno have only Foods Co, and a San
+Jose postcode returns no store at all. An empty list reads as a broken agent, so
+name the gap and offer what is left:
+
+> No Ralphs, Food 4 Less or Foods Co near 95113 — those are the chains I can
+> price. There is a Safeway at 1000 S Bascom Ave and a Trader Joe's on Coleman,
+> from the store list. I can plan with estimates, or you can tell me prices you
+> see and I will use those.
+
+`stores` covers every supermarket in the state, not only the ones with prices, so
+there is nearly always somewhere to name.
+
+## Whose prices these are
+
+Their number says which country's shops are theirs. `profile set --phone <their
+number>` records it, and the country follows from the dialling code.
+
+Kroger prices **US** stores. When somebody's number is not American, shopping
+comes back with `store_prices_suppressed` and every line falls back to an
+estimate — because a price from a Los Angeles shelf looks exactly like a real one
+to a reader in São Paulo, and that is worse than an admitted gap.
+
+**Ask, do not decide.** When it is suppressed, say so and offer the choice:
+
+> Your number is Brazilian, and the only shop prices I have are US ones from
+> Ralphs in Los Angeles. Want me to show those anyway, or plan without prices?
+
+If they want them, `profile set --price-country US` records that they asked, and
+prices return. Their own country stays on the profile either way.
+
+Never convert a price into their currency. A precise figure in reais, derived
+from a Californian shelf, is a more confident lie than saying there is no local
+price. `estimates_currency` names the money the catalogue's estimates are in;
+they are not their money, and you say so.
+
 ## Showing a product
 
 When somebody asks what to look for on the shelf, send the photo itself. A link
