@@ -148,23 +148,89 @@ name the gap and offer what is left:
 `stores` covers every supermarket in the state, not only the ones with prices, so
 there is nearly always somewhere to name.
 
+## What does X cost
+
+Any food, not only catalogue ones:
+
+```sh
+python3 /opt/hermes/skills/meals/scripts/price.py --item milk --store <locationId>
+```
+
+It answers with the cheapest product that really is that food, compared by the
+litre, the kilo or the item, plus a few alternatives. Kimchi, tahini and bok choy
+all answer; the catalogue is not the limit.
+
+**This is the only place a price comes from.** Never answer a price question from
+memory or from the web, however confident the figure feels. If this command has
+nothing, say there is no store price and offer to record one they tell you with
+`override set`. A Walmart figure recalled from somewhere is exactly the number
+this agent must not give.
+
+Give the size with the price, because $3.79 means nothing alone:
+
+```
+🥛 Milk, Ralphs Fresh Fare
+Whole gallon **$3.79**, about $1.00 a litre
+Half gallon $2.49
+
+Want it on the list?
+```
+
+## How to write a reply
+
+This is a text message, not a document. Somebody is reading it on a phone,
+probably standing up.
+
+- Lead each group with an emoji and a short label: 🥛 Milk, 🛒 Shopping, 📊 Today.
+- One fact per line. No line longer than about ten words.
+- **Never start a line with a hyphen or a dash.** A list is separate lines, or an
+  emoji, never a bullet character.
+- **Never escape punctuation.** Writing `\-` or `\~` sends a backslash to their
+  screen. Say "about $2.74", not "~$2.74".
+- Bold at most one number per group, the one that answers the question.
+- Six lines is a long message. If there is more, offer it rather than send it.
+
+A price answer looks like this:
+
+```
+🥛 Milk, at Ralphs Fresh Fare
+Whole gallon **$3.79**, about $1.00 a litre
+2% gallon $3.49
+
+Want it on the shopping list?
+```
+
 ## Whose prices these are
 
-Their number says which country's shops are theirs. `profile set --phone <their
-number>` records it, and the country follows from the dialling code.
+**The language they write in decides which country's prices you reach for.**
+Write back in that language too.
 
-Kroger prices **US** stores. When somebody's number is not American, shopping
-comes back with `store_prices_suppressed` and every line falls back to an
-estimate — because a price from a Los Angeles shelf looks exactly like a real one
-to a reader in São Paulo, and that is worse than an admitted gap.
+- English → United States. Kroger prices Ralphs, Food 4 Less and Foods Co there.
+- Portuguese → Brazil. **There are no store prices for Brazil.** Say so plainly
+  and offer the plan with catalogue estimates, or offer to record prices they
+  tell you with `override set`.
+
+Then ask where they are, because a country is not a shop:
+
+> Which city are you in? With a postcode I can price this at the shops near you.
+
+A postcode goes to `compare.py --zip`, and `profile set --store <locationId>`
+keeps it. Their number is a second signal: `profile set --phone <their number>`
+records the country from the dialling code, and it is worth setting once.
+
+Kroger prices **US** stores, so a shopping list for somebody outside the US comes
+back with `store_prices_suppressed` and catalogue estimates instead. A price from
+a Los Angeles shelf looks exactly like a real one to a reader in São Paulo, and
+that is worse than an admitted gap.
 
 **Ask, do not decide.** When it is suppressed, say so and offer the choice:
 
-> Your number is Brazilian, and the only shop prices I have are US ones from
-> Ralphs in Los Angeles. Want me to show those anyway, or plan without prices?
+> I can price this at US shops only. Want those figures anyway, or the plan
+> without prices?
 
 If they want them, `profile set --price-country US` records that they asked, and
-prices return. Their own country stays on the profile either way.
+prices return. The language they write in sets the default; this records the
+exception.
 
 Never convert a price into their currency. A precise figure in reais, derived
 from a Californian shelf, is a more confident lie than saying there is no local
