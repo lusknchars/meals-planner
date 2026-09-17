@@ -46,7 +46,10 @@ It also says what it does not know:
 
 ## Install
 
-Docker Desktop and a free Plow line are the only prerequisites.
+Docker Desktop and a free Plow line are the only prerequisites. Without Kroger
+keys it still plans and makes the list, with every price marked as a catalogue
+estimate; real store prices need a free app at developer.kroger.com, set up as in
+[Real stores and real prices](#real-stores-and-real-prices).
 
 1. Get a line for this agent and mint its credential with Plow's own CLI, then
    save the result as `plow-credentials` in this folder, mode 0600. It stays out
