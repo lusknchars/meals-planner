@@ -18,7 +18,7 @@ The agent-index s6 service and vendor/client.pin are copied unchanged from
 plow-pbc/life-assistant-hermes-agent at
 7592281e9b6264e3b433f3f06e2c0d697f57cc3e.
 The reporter is fetched from plow-pbc/agent-index-client at
-87901f8b182a8a7c65ee3dd7267f8f835ee2a545 and verified by SHA-256.
+3f116994930cb3d1c23a485851953dd6c1eef039 and verified by SHA-256.
 These Plow components are Apache-2.0, copyright 2026 The Plow Collective, Inc.
 Their license and available notice files accompany this image under vendor/.
 Plow and the Plow logo are trademarks of The Plow Collective, Inc.
