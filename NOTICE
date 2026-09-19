@@ -14,11 +14,9 @@ This image derives from plow-pbc/plow-hermes-agent at
 8088c7f77f5ffd536a80c9dc302ebdb39e6be1d2. Its upstream runtime and bundled
 dependencies retain their own licenses.
 
-The agent-index s6 service and vendor/client.pin are copied unchanged from
-plow-pbc/life-assistant-hermes-agent at
-7592281e9b6264e3b433f3f06e2c0d697f57cc3e.
-The reporter is fetched from plow-pbc/agent-index-client at
-3f116994930cb3d1c23a485851953dd6c1eef039 and verified by SHA-256.
+The image reports usage through the agent-index service and client its Plow
+base image ships. vendor/client.pin names the plow-pbc/agent-index-client
+commit that index.py fetches on the host and verifies by SHA-256.
 These Plow components are Apache-2.0, copyright 2026 The Plow Collective, Inc.
 Their license and available notice files accompany this image under vendor/.
 Plow and the Plow logo are trademarks of The Plow Collective, Inc.

@@ -68,9 +68,8 @@ docker compose logs -f agent
 down -v` deletes them permanently, along with the installation's reporting
 identity.
 
-The container reports token usage to the Agent Index every five minutes. An agent
-whose owner does not want that is one built without the `image/s6-overlay`
-service.
+The container reports token usage to the Agent Index every five minutes, through
+the reporter its Plow base image ships.
 
 ## Restrictions and brands
 
